@@ -1,0 +1,144 @@
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface AddMealDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (meal: {
+    name: string;
+    meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snacks';
+    calories: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+  }) => void;
+}
+
+export function AddMealDialog({ open, onClose, onAdd }: AddMealDialogProps) {
+  const [name, setName] = useState('');
+  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snacks'>('breakfast');
+  const [calories, setCalories] = useState('');
+  const [protein, setProtein] = useState('');
+  const [carbs, setCarbs] = useState('');
+  const [fat, setFat] = useState('');
+
+  const handleSubmit = () => {
+    if (!name || !calories) return;
+
+    onAdd({
+      name,
+      meal_type: mealType,
+      calories: parseInt(calories) || 0,
+      protein_g: parseInt(protein) || 0,
+      carbs_g: parseInt(carbs) || 0,
+      fat_g: parseInt(fat) || 0,
+    });
+
+    setName('');
+    setCalories('');
+    setProtein('');
+    setCarbs('');
+    setFat('');
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Add Meal</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Food Name</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Chicken Breast"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="meal-type">Meal Type</Label>
+            <Select value={mealType} onValueChange={(value: any) => setMealType(value)}>
+              <SelectTrigger id="meal-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="breakfast">Breakfast</SelectItem>
+                <SelectItem value="lunch">Lunch</SelectItem>
+                <SelectItem value="dinner">Dinner</SelectItem>
+                <SelectItem value="snacks">Snacks</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="calories">Calories</Label>
+              <Input
+                id="calories"
+                type="number"
+                value={calories}
+                onChange={(e) => setCalories(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="protein">Protein (g)</Label>
+              <Input
+                id="protein"
+                type="number"
+                value={protein}
+                onChange={(e) => setProtein(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="carbs">Carbs (g)</Label>
+              <Input
+                id="carbs"
+                type="number"
+                value={carbs}
+                onChange={(e) => setCarbs(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fat">Fat (g)</Label>
+              <Input
+                id="fat"
+                type="number"
+                value={fat}
+                onChange={(e) => setFat(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} className="border-gray-300">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!name || !calories}
+            className="bg-teal-600 hover:bg-teal-700"
+          >
+            Add Meal
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
