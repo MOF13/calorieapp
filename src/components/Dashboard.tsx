@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Utensils, ChevronLeft, ChevronRight, Plus, LogOut, Camera, Calendar, User, Zap, Activity } from 'lucide-react';
+import { Utensils, ChevronLeft, ChevronRight, Plus, LogOut, Camera, Calendar, User, Zap, Activity, Flame, TrendingUp, Target } from 'lucide-react';
 import { format, addDays, subDays, isAfter, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { MacroDonutChart } from './dashboard/MacroDonutChart';
@@ -184,6 +184,35 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
+            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-3 sm:p-4 border border-slate-600 hover:border-yellow-400/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400" />
+                <p className="text-xs sm:text-sm text-slate-400">Calories</p>
+              </div>
+              <p className="text-lg sm:text-2xl font-bold text-white">{dailyLog?.total_calories || 0}</p>
+              <p className="text-xs text-slate-500">{Math.round(userProfile?.daily_calories || 0)} goal</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-3 sm:p-4 border border-slate-600 hover:border-yellow-400/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+                <p className="text-xs sm:text-sm text-slate-400">Protein</p>
+              </div>
+              <p className="text-lg sm:text-2xl font-bold text-white">{dailyLog?.total_protein_g || 0}g</p>
+              <p className="text-xs text-slate-500">{userProfile?.daily_protein_g || 0}g goal</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-3 sm:p-4 border border-slate-600 hover:border-yellow-400/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-lime-400" />
+                <p className="text-xs sm:text-sm text-slate-400">Progress</p>
+              </div>
+              <p className="text-lg sm:text-2xl font-bold text-white">{Math.round(((dailyLog?.total_calories || 0) / (userProfile?.daily_calories || 1)) * 100)}%</p>
+              <p className="text-xs text-slate-500">Daily goal</p>
+            </div>
           </div>
         </div>
 
