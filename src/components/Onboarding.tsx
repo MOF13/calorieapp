@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import BasicInfoStep from './onboarding/BasicInfoStep';
 import ActivityLevelStep from './onboarding/ActivityLevelStep';
 import GoalStep from './onboarding/GoalStep';
@@ -132,24 +131,33 @@ export default function Onboarding({ onComplete, userId }: OnboardingProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-3 sm:p-4">
-      <div className="w-full max-w-2xl">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-gray-100">
-            <div className="mb-3 sm:mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs sm:text-sm font-medium text-gray-600">
-                  Step {currentStep} of {totalSteps}
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl animate-fade-in">
+        <div className="glass-card rounded-[2.5rem] shadow-2xl overflow-hidden border-white/40">
+          <div className="p-8 border-b border-white/20">
+            <div className="mb-6 text-center">
+               <h2 className="text-2xl font-black text-vitality-slate mb-1">Set Your Target</h2>
+               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Personalizing Your Journey</p>
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-3 px-1">
+                <span className="text-xs font-black text-slate-400 uppercase tracking-tighter">
+                  PHASE {currentStep} OF {totalSteps}
                 </span>
-                <span className="text-xs sm:text-sm font-medium text-emerald-600">
-                  {progress.toFixed(0)}% Complete
+                <span className="text-xs font-black text-vitality-emerald uppercase tracking-tighter">
+                  {progress.toFixed(0)}% READY
                 </span>
               </div>
-              <Progress value={progress} className="h-1.5 sm:h-2" />
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                 <div 
+                   className="h-full vitality-gradient transition-all duration-700 ease-out rounded-full shadow-sm"
+                   style={{ width: `${progress}%` }}
+                 ></div>
+              </div>
             </div>
           </div>
 
-          <div className="p-4 sm:p-6 md:p-8 min-h-[350px] sm:min-h-[400px]">
+          <div className="p-8 md:p-12 min-h-[400px]">
             {currentStep === 1 && (
               <BasicInfoStep data={data} updateData={updateData} />
             )}
@@ -164,33 +172,33 @@ export default function Onboarding({ onComplete, userId }: OnboardingProps) {
             )}
           </div>
 
-          <div className="p-4 sm:p-6 bg-gray-50 border-t border-gray-100 flex justify-between gap-2">
+          <div className="p-8 bg-slate-50/50 backdrop-blur-sm border-t border-white/20 flex justify-between gap-4">
             <Button
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4"
+              className="flex items-center gap-2 font-bold px-8 rounded-2xl border-slate-200 hover:bg-white disabled:opacity-20"
             >
-              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              Back
+              <ChevronLeft className="w-4 h-4" />
+              Previous
             </Button>
 
             {currentStep < totalSteps ? (
               <Button
                 onClick={nextStep}
                 disabled={!isStepValid()}
-                className="bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4"
+                className="vitality-gradient hover:opacity-90 flex items-center gap-2 px-10 rounded-2xl shadow-lg shadow-vitality-emerald/20 font-bold"
               >
-                Next
-                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                Next Step
+                <ChevronRight className="w-4 h-4" />
               </Button>
             ) : (
               <Button
                 onClick={handleComplete}
-                className="bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4"
+                className="vitality-gradient hover:opacity-90 flex items-center gap-2 px-10 rounded-2xl shadow-lg shadow-vitality-emerald/20 font-bold animate-pulse"
               >
-                Start Tracking
-                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                Launch Dashboard
+                <ChevronRight className="w-4 h-4" />
               </Button>
             )}
           </div>

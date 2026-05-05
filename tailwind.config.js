@@ -9,12 +9,18 @@ export default {
   ],
   theme: {
     extend: {
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        outfit: ['Outfit', 'sans-serif'],
       },
       colors: {
+        vitality: {
+          lime: '#A3E635',
+          emerald: '#10B981',
+          slate: '#0F172A',
+          amber: '#FBBF24',
+          mint: '#F8FAFC',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
