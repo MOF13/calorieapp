@@ -56,10 +56,7 @@ export function MacroDonutChart({ consumed, goals }: MacroDonutChartProps) {
   const displayPercentage = displayGoal > 0 ? (displayValue / displayGoal) * 100 : 0;
 
   return (
-    <Card className="p-4 sm:p-6 w-full bg-white border-gray-200 shadow-sm">
-      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 text-center">
-        Daily Macro Breakdown
-      </h3>
+    <div className="p-4 sm:p-6 w-full">
       <div className="relative flex items-center justify-center mb-4 sm:mb-6">
         <DonutChart
           data={macroData}

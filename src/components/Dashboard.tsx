@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, LogOut, Camera, Flame, Zap, Target, TrendingUp, Utensils } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, LogOut, Camera, Flame, Zap, Target, TrendingUp } from 'lucide-react';
 import { format, addDays, subDays, isAfter, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
