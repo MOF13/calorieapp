@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Utensils, ChevronLeft, ChevronRight, Plus, LogOut, Camera } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, LogOut, Camera, Flame, Zap, Target, TrendingUp, Utensils } from 'lucide-react';
 import { format, addDays, subDays, isAfter, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -111,13 +111,15 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700">
         <div className="max-w-2xl mx-auto px-3 sm:px-4 md:px-6">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <Utensils className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600" />
-              <span className="text-base sm:text-lg font-bold text-gray-900">CalorieTracker</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" />
+              </div>
+              <span className="text-base sm:text-lg font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">FitTrack</span>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -128,7 +130,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                     onSignOut();
                   }
                 }}
-                className="text-xs sm:text-sm text-gray-700 border-gray-300 hover:bg-gray-50 px-2 py-1.5 sm:px-3 sm:py-2 h-8 sm:h-10"
+                className="text-xs sm:text-sm text-slate-300 border-slate-600 hover:bg-slate-700 px-2 py-1.5 sm:px-3 sm:py-2 h-8 sm:h-10"
               >
                 <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-1" />
                 <span className="hidden sm:inline">Sign Out</span>
@@ -139,12 +141,12 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
       </header>
 
       <main className="max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 pb-24">
-        <div className="mb-4 sm:mb-6">
-          <div className="text-center mb-3 sm:mb-4">
-            <p className="text-xs sm:text-sm font-medium text-gray-600">
+        <div className="mb-6 sm:mb-8">
+          <div className="text-center mb-4 sm:mb-6">
+            <p className="text-xs sm:text-sm font-medium text-slate-400">
               {format(currentDate, 'EEEE')}
             </p>
-            <h2 className="text-lg sm:text-xl font-bold text-teal-600">
+            <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
               {format(currentDate, 'MMMM d, yyyy')}
             </h2>
           </div>
@@ -154,7 +156,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
               <Button
                 variant="outline"
                 onClick={handlePreviousDay}
-                className="border-gray-300 hover:bg-gray-50 text-xs sm:text-sm px-2 sm:px-3"
+                className="border-slate-600 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm px-2 sm:px-3"
               >
                 <ChevronLeft className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden xs:inline">Previous</span>
@@ -164,16 +166,46 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                 variant="outline"
                 onClick={handleNextDay}
                 disabled={isFutureDate}
-                className="border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm px-2 sm:px-3"
+                className="border-slate-600 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 text-xs sm:text-sm px-2 sm:px-3"
               >
                 Next
                 <ChevronRight className="ml-1 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
             </ButtonGroup>
           </div>
+
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
+            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-3 sm:p-4 border border-slate-600 hover:border-yellow-400/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400" />
+                <p className="text-xs sm:text-sm text-slate-400">Calories</p>
+              </div>
+              <p className="text-lg sm:text-2xl font-bold text-white">{dailyLog?.total_calories || 0}</p>
+              <p className="text-xs text-slate-500">{Math.round(userProfile?.daily_calories || 0)} goal</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-3 sm:p-4 border border-slate-600 hover:border-yellow-400/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+                <p className="text-xs sm:text-sm text-slate-400">Protein</p>
+              </div>
+              <p className="text-lg sm:text-2xl font-bold text-white">{dailyLog?.total_protein_g || 0}g</p>
+              <p className="text-xs text-slate-500">{userProfile?.daily_protein_g || 0}g goal</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-3 sm:p-4 border border-slate-600 hover:border-yellow-400/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-lime-400" />
+                <p className="text-xs sm:text-sm text-slate-400">Progress</p>
+              </div>
+              <p className="text-lg sm:text-2xl font-bold text-white">{Math.round(((dailyLog?.total_calories || 0) / (userProfile?.daily_calories || 1)) * 100)}%</p>
+              <p className="text-xs text-slate-500">Daily goal</p>
+            </div>
+          </div>
         </div>
 
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-6 sm:mb-8 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl p-5 sm:p-6 border border-slate-600">
+          <h3 className="text-sm sm:text-base font-semibold text-slate-200 mb-4">Macro Breakdown</h3>
           <MacroDonutChart
             consumed={{
               protein: dailyLog?.total_protein_g || 0,
@@ -190,40 +222,45 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
           />
         </div>
 
-        <div className="space-y-6 max-w-2xl mx-auto">
-          <MealSection
-            title="Breakfast"
-            meals={getMealsByType('breakfast')}
-            totalCalories={getMealTypeCalories('breakfast')}
-          />
-          <MealSection
-            title="Lunch"
-            meals={getMealsByType('lunch')}
-            totalCalories={getMealTypeCalories('lunch')}
-          />
-          <MealSection
-            title="Dinner"
-            meals={getMealsByType('dinner')}
-            totalCalories={getMealTypeCalories('dinner')}
-          />
-          <MealSection
-            title="Snacks"
-            meals={getMealsByType('snacks')}
-            totalCalories={getMealTypeCalories('snacks')}
-          />
+        <div className="space-y-4 sm:space-y-5 max-w-2xl mx-auto">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-300 mb-3 px-1">Today's Meals</h3>
+            <div className="space-y-4 sm:space-y-5">
+              <MealSection
+                title="Breakfast"
+                meals={getMealsByType('breakfast')}
+                totalCalories={getMealTypeCalories('breakfast')}
+              />
+              <MealSection
+                title="Lunch"
+                meals={getMealsByType('lunch')}
+                totalCalories={getMealTypeCalories('lunch')}
+              />
+              <MealSection
+                title="Dinner"
+                meals={getMealsByType('dinner')}
+                totalCalories={getMealTypeCalories('dinner')}
+              />
+              <MealSection
+                title="Snacks"
+                meals={getMealsByType('snacks')}
+                totalCalories={getMealTypeCalories('snacks')}
+              />
+            </div>
+          </div>
         </div>
       </main>
 
       <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
         <button
           onClick={() => setShowPhotoUpload(true)}
-          className="w-14 h-14 bg-teal-600 hover:bg-teal-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-slate-900 rounded-full shadow-lg hover:shadow-2xl transition-all flex items-center justify-center font-semibold"
         >
           <Camera className="w-6 h-6" />
         </button>
         <button
           onClick={() => setShowAddMealDialog(true)}
-          className="w-14 h-14 bg-gray-900 hover:bg-gray-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          className="w-14 h-14 bg-slate-700 hover:bg-slate-600 text-white rounded-full shadow-lg hover:shadow-2xl transition-all flex items-center justify-center border border-slate-600 hover:border-yellow-400/50"
         >
           <Plus className="w-6 h-6" />
         </button>

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { DonutChart } from "@/components/ui/donut-chart";
-import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -147,6 +146,6 @@ export function MacroDonutChart({ consumed, goals }: MacroDonutChartProps) {
           );
         })}
       </div>
-    </Card>
+    </div>
   );
 }
