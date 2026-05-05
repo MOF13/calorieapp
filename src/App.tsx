@@ -20,22 +20,27 @@ function App() {
   }, []);
 
   const initializeApp = async () => {
-    const user = await getCurrentUser();
+    try {
+      const user = await getCurrentUser();
 
-    if (user) {
-      setUserId(user.id);
-      const profile = await getUserProfile(user.id);
+      if (user) {
+        setUserId(user.id);
+        const profile = await getUserProfile(user.id);
 
-      if (profile) {
-        setCurrentView('dashboard');
+        if (profile) {
+          setCurrentView('dashboard');
+        } else {
+          setCurrentView('onboarding');
+        }
       } else {
-        setCurrentView('onboarding');
+        setCurrentView('landing');
       }
-    } else {
+    } catch (error) {
+      console.error('Initialization error:', error);
       setCurrentView('landing');
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const handleSignUp = async (email: string, password: string, name: string) => {
