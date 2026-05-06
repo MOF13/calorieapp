@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -40,7 +39,7 @@ export function BarcodeScanner({ open, onClose, onDetected }: BarcodeScannerProp
 
       const selectedDeviceId = videoInputDevices[0].deviceId;
       
-      await reader.decodeFromVideoDevice(selectedDeviceId, videoRef.current!, (result, error) => {
+      await reader.decodeFromVideoDevice(selectedDeviceId, videoRef.current!, (result) => {
         if (result) {
           handleDetected(result.getText());
         }

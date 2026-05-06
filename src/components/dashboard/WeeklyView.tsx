@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { getWeeklyLogs } from '@/lib/db';
-import { Activity, Flame, TrendingUp } from 'lucide-react';
+import { Flame, TrendingUp } from 'lucide-react';
 
 interface WeeklyViewProps {
   userId: string;

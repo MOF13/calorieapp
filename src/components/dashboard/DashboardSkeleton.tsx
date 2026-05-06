@@ -1,5 +1,3 @@
-import { Utensils } from 'lucide-react';
-
 export function DashboardSkeleton() {
   return (
     <div className="min-h-screen pb-24 animate-pulse">

@@ -290,3 +290,22 @@ export async function createMealTemplate(template: any): Promise<any | null> {
   }
   return data;
 }
+
+export async function getWeeklyLogs(userId: string): Promise<any[]> {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const dateStr = sevenDaysAgo.toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('daily_logs')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('log_date', dateStr)
+    .order('log_date', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching weekly logs:', error);
+    return [];
+  }
+  return data || [];
+}
