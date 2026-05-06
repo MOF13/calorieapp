@@ -158,6 +158,8 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
       toast.success('Saved as template!');
       loadTemplates();
     }
+  };
+
   const handleBarcodeDetected = (product: any) => {
     setScannedProduct(product);
     setShowBarcodeScanner(false);
@@ -424,8 +426,9 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
               />
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      )}
+    </main>
 
       {/* Floating Action Buttons (Desktop Only) */}
       <div className="hidden md:flex fixed bottom-8 left-1/2 -translate-x-1/2 gap-4 z-50">
