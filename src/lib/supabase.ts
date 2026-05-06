@@ -7,10 +7,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing Supabase environment variables. Check your .env file or Vercel settings.');
 }
 
-const fallbackUrl = 'https://placeholder.supabase.co';
-const fallbackKey = 'placeholder';
-
-export const supabase = createClient(supabaseUrl || fallbackUrl, supabaseAnonKey || fallbackKey);
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
 export interface UserProfile {
   id: string;
