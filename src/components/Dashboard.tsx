@@ -480,9 +480,13 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
 
       <AddMealDialog
         open={showAddMealDialog}
-        onClose={() => setShowAddMealDialog(false)}
+        onClose={() => {
+          setShowAddMealDialog(false);
+          setScannedProduct(null);
+        }}
         onAdd={handleAddMeal}
         templates={templates}
+        initialData={scannedProduct}
         onScanClick={() => setShowBarcodeScanner(true)}
       />
 

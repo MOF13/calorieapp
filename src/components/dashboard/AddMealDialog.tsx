@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Barcode } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -19,15 +19,26 @@ interface AddMealDialogProps {
   }) => void;
   templates?: any[];
   onScanClick?: () => void;
+  initialData?: any;
 }
 
-export function AddMealDialog({ open, onClose, onAdd, templates = [], onScanClick }: AddMealDialogProps) {
+export function AddMealDialog({ open, onClose, onAdd, templates = [], onScanClick, initialData }: AddMealDialogProps) {
   const [name, setName] = useState('');
   const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snacks'>('breakfast');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fat, setFat] = useState('');
+
+  useEffect(() => {
+    if (initialData && open) {
+      setName(initialData.name || '');
+      setCalories(initialData.calories?.toString() || '');
+      setProtein(initialData.protein_g?.toString() || '');
+      setCarbs(initialData.carbs_g?.toString() || '');
+      setFat(initialData.fat_g?.toString() || '');
+    }
+  }, [initialData, open]);
 
   const handleSubmit = () => {
     if (!name || !calories) return;
