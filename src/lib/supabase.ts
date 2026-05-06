@@ -23,6 +23,9 @@ export interface UserProfile {
   daily_protein_g: number;
   daily_carbs_g: number;
   daily_fat_g: number;
+  current_streak?: number;
+  longest_streak?: number;
+  last_log_date?: string;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +38,8 @@ export interface DailyLog {
   total_protein_g: number;
   total_carbs_g: number;
   total_fat_g: number;
+  water_ml?: number;
+  water_goal_ml?: number;
   created_at: string;
   updated_at: string;
 }
@@ -50,5 +55,26 @@ export interface Meal {
   carbs_g: number;
   fat_g: number;
   photo_url?: string;
+  created_at: string;
+}
+
+export interface WeightLog {
+  id: string;
+  user_id: string;
+  weight_kg: number;
+  logged_at: string;
+  note?: string;
+}
+
+export interface MealTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snacks';
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  use_count: number;
   created_at: string;
 }

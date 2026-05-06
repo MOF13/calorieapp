@@ -1,9 +1,11 @@
-import { Plus, Coffee, Sun, Flame, Cookie, ChevronRight } from 'lucide-react';
+import { Plus, Coffee, Sun, Flame, Cookie, ChevronRight, Bookmark } from 'lucide-react';
 
 interface MealSectionProps {
   title: string;
   meals: any[];
   totalCalories: number;
+  onDeleteMeal?: (mealId: string) => void;
+  onSaveTemplate?: (meal: any) => void;
 }
 
 const mealIcons: Record<string, { icon: any; color: string; bgColor: string; borderColor: string }> = {
@@ -13,7 +15,7 @@ const mealIcons: Record<string, { icon: any; color: string; bgColor: string; bor
   Snacks: { icon: Cookie, color: 'text-pink-500', bgColor: 'bg-pink-50/50', borderColor: 'border-pink-200/50' },
 };
 
-export function MealSection({ title, meals, totalCalories }: MealSectionProps) {
+export function MealSection({ title, meals, totalCalories, onDeleteMeal, onSaveTemplate }: MealSectionProps) {
   const mealIcon = mealIcons[title];
   const IconComponent = mealIcon?.icon || Coffee;
 
@@ -52,10 +54,10 @@ export function MealSection({ title, meals, totalCalories }: MealSectionProps) {
         </div>
       ) : (
         <div className="space-y-3">
-          {meals.map((meal, index) => (
+          {meals.map((meal) => (
             <div
-              key={index}
-              className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between border border-slate-100 hover:border-vitality-lime/30 hover:bg-white transition-all cursor-pointer"
+              key={meal.id}
+              className="group/item bg-white/50 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between border border-slate-100 hover:border-vitality-lime/30 hover:bg-white transition-all"
             >
               <div className="flex flex-col">
                 <p className="font-bold text-vitality-slate text-sm leading-tight">{meal.name}</p>
@@ -63,9 +65,31 @@ export function MealSection({ title, meals, totalCalories }: MealSectionProps) {
                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">PORTION OK</span>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-black text-vitality-slate">{meal.calories}</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">KCAL</p>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm font-black text-vitality-slate">{meal.calories}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">KCAL</p>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                  {onSaveTemplate && (
+                    <button
+                      onClick={() => onSaveTemplate(meal)}
+                      className="p-2 text-slate-300 hover:text-vitality-emerald hover:bg-vitality-lime/10 rounded-lg transition-all"
+                      title="Save as Template"
+                    >
+                      <Bookmark className="w-4 h-4" />
+                    </button>
+                  )}
+                  {onDeleteMeal && (
+                    <button
+                      onClick={() => onDeleteMeal(meal.id)}
+                      className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      title="Delete Meal"
+                    >
+                      <Plus className="w-4 h-4 rotate-45" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

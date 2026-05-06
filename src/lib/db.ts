@@ -212,3 +212,81 @@ export async function deleteMeal(mealId: string): Promise<boolean> {
 
   return true;
 }
+
+export async function updateWaterIntake(dailyLogId: string, amountMl: number): Promise<DailyLog | null> {
+  const { data, error } = await supabase
+    .from('daily_logs')
+    .update({ 
+      water_ml: amountMl,
+      updated_at: new Date().toISOString() 
+    })
+    .eq('id', dailyLogId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating water intake:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function logWeight(userId: string, weightKg: number): Promise<any | null> {
+  const { data, error } = await supabase
+    .from('weight_logs')
+    .insert({ user_id: userId, weight_kg: weightKg })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error logging weight:', error);
+    return null;
+  }
+
+  await updateUserProfile(userId, { weight_kg: weightKg });
+  return data;
+}
+
+export async function getWeightLogs(userId: string, limit: number = 30): Promise<any[]> {
+  const { data, error } = await supabase
+    .from('weight_logs')
+    .select('*')
+    .eq('user_id', userId)
+    .order('logged_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching weight logs:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function getMealTemplates(userId: string): Promise<any[]> {
+  const { data, error } = await supabase
+    .from('meal_templates')
+    .select('*')
+    .eq('user_id', userId)
+    .order('use_count', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching templates:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function createMealTemplate(template: any): Promise<any | null> {
+  const { data, error } = await supabase
+    .from('meal_templates')
+    .insert(template)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating template:', error);
+    return null;
+  }
+  return data;
+}

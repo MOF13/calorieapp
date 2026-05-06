@@ -7,9 +7,16 @@ import { MealSection } from './dashboard/MealSection';
 import { AddMealDialog } from './dashboard/AddMealDialog';
 import { PhotoUploadModal } from './PhotoUploadModal';
 import { FoodResultsScreen } from './FoodResultsScreen';
-import { getUserProfile, getOrCreateDailyLog, getMeals, createMeal } from '@/lib/db';
+import { getUserProfile, getOrCreateDailyLog, getMeals, createMeal, deleteMeal, updateWaterIntake, logWeight, getMealTemplates, createMealTemplate } from '@/lib/db';
+import { DashboardSkeleton } from './dashboard/DashboardSkeleton';
+import { WaterTracker } from './dashboard/WaterTracker';
+import { BottomNav } from './dashboard/BottomNav';
+import { WeeklyView } from './dashboard/WeeklyView';
+import { WeightLogCard } from './dashboard/WeightLogCard';
+import { BarcodeScanner } from './dashboard/BarcodeScanner';
 import { signOut } from '@/lib/auth';
-import type { UserProfile, DailyLog, Meal } from '@/lib/supabase';
+import type { UserProfile, DailyLog, Meal, MealTemplate } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface DashboardProps {
   userId: string | null;
@@ -25,12 +32,23 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [showFoodResults, setShowFoodResults] = useState(false);
   const [photoData, setPhotoData] = useState<{ base64: string; url: string } | null>(null);
+  const [activeTab, setActiveTab] = useState('today');
+  const [templates, setTemplates] = useState<MealTemplate[]>([]);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [scannedProduct, setScannedProduct] = useState<any | null>(null);
 
   useEffect(() => {
     if (userId) {
       loadUserProfile();
+      loadTemplates();
     }
   }, [userId]);
+
+  const loadTemplates = async () => {
+    if (!userId) return;
+    const data = await getMealTemplates(userId);
+    setTemplates(data);
+  };
 
   useEffect(() => {
     if (userId) {
@@ -100,6 +118,52 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
     await loadDailyData();
   };
 
+  const handleDeleteMeal = async (mealId: string) => {
+    if (!userId) return;
+    const success = await deleteMeal(mealId);
+    if (success) {
+      await loadDailyData();
+    }
+  };
+
+  const handleUpdateWater = async (amount: number) => {
+    if (!dailyLog) return;
+    const currentWater = dailyLog.water_ml || 0;
+    const newLog = await updateWaterIntake(dailyLog.id, currentWater + amount);
+    if (newLog) {
+      setDailyLog(newLog);
+    }
+  };
+
+  const handleLogWeight = async (weight: number) => {
+    if (!userId) return;
+    const newLog = await logWeight(userId, weight);
+    if (newLog) {
+      loadUserProfile();
+    }
+  };
+
+  const handleSaveTemplate = async (meal: Meal) => {
+    if (!userId) return;
+    const template = await createMealTemplate({
+      user_id: userId,
+      name: meal.name,
+      meal_type: meal.meal_type,
+      calories: meal.calories,
+      protein_g: meal.protein_g,
+      carbs_g: meal.carbs_g,
+      fat_g: meal.fat_g,
+    });
+    if (template) {
+      toast.success('Saved as template!');
+      loadTemplates();
+    }
+  const handleBarcodeDetected = (product: any) => {
+    setScannedProduct(product);
+    setShowBarcodeScanner(false);
+    setShowAddMealDialog(true);
+  };
+
   const getMealsByType = (type: string) => {
     return meals.filter((meal) => meal.meal_type === type);
   };
@@ -109,14 +173,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
   };
 
   if (!userProfile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-vitality-emerald border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-vitality-slate font-bold animate-pulse">Synchronizing Data...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -136,7 +193,9 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
             <div className="flex items-center gap-4">
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-vitality-lime/10 rounded-full border border-vitality-emerald/20">
                 <Zap className="w-4 h-4 text-vitality-emerald" />
-                <span className="text-xs font-bold text-vitality-emerald">DAILY STREAK: 5 DAYS</span>
+                <span className="text-xs font-bold text-vitality-emerald uppercase tracking-wider">
+                  STREAK: {userProfile?.current_streak || 0} DAYS
+                </span>
               </div>
               <Button
                 variant="outline"
@@ -186,74 +245,119 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
               </Button>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
-            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-3 sm:p-4 border border-slate-600 hover:border-yellow-400/50 transition-colors">
-              <div className="flex items-center gap-2 mb-2">
-                <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400" />
-                <p className="text-xs sm:text-sm text-slate-400">Calories</p>
+          {userProfile && dailyLog && (
+            <div className={`mb-6 p-4 rounded-3xl border flex items-center justify-between transition-all ${
+              (userProfile.daily_calories - dailyLog.total_calories) >= 0
+                ? 'bg-vitality-emerald/10 border-vitality-emerald/20 text-vitality-emerald'
+                : 'bg-red-50 border-red-100 text-red-600'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                  (userProfile.daily_calories - dailyLog.total_calories) >= 0 ? 'bg-vitality-emerald/20' : 'bg-red-100'
+                }`}>
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest opacity-70">Remaining Balance</p>
+                  <p className="text-xl font-black tabular-nums">
+                    {Math.abs(Math.round(userProfile.daily_calories - dailyLog.total_calories))} kcal 
+                    <span className="text-sm font-bold ml-2">
+                      {(userProfile.daily_calories - dailyLog.total_calories) >= 0 ? 'LEFT' : 'OVER LIMIT'}
+                    </span>
+                  </p>
+                </div>
               </div>
-              <p className="text-lg sm:text-2xl font-bold text-white">{dailyLog?.total_calories || 0}</p>
-              <p className="text-xs text-slate-500">{Math.round(userProfile?.daily_calories || 0)} goal</p>
+              <div className="hidden sm:block">
+                 <div className="h-1.5 w-32 bg-black/5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-1000 ${
+                        (userProfile.daily_calories - dailyLog.total_calories) >= 0 ? 'bg-vitality-emerald' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${Math.min(100, ((dailyLog.total_calories || 0) / userProfile.daily_calories) * 100)}%` }}
+                    ></div>
+                 </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
+            <div className="glass-card p-3 sm:p-4 border-white/20 hover:border-vitality-emerald/40 transition-all group">
+              <div className="flex items-center gap-2 mb-2">
+                <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 group-hover:scale-110 transition-transform" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Calories</p>
+              </div>
+              <p className="text-lg sm:text-2xl font-black text-vitality-slate tabular-nums">{dailyLog?.total_calories || 0}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">{Math.round(userProfile?.daily_calories || 0)} goal</p>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-3 sm:p-4 border border-slate-600 hover:border-yellow-400/50 transition-colors">
+            <div className="glass-card p-3 sm:p-4 border-white/20 hover:border-vitality-emerald/40 transition-all group">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
-                <p className="text-xs sm:text-sm text-slate-400">Protein</p>
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-vitality-emerald group-hover:scale-110 transition-transform" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Protein</p>
               </div>
-              <p className="text-lg sm:text-2xl font-bold text-white">{dailyLog?.total_protein_g || 0}g</p>
-              <p className="text-xs text-slate-500">{userProfile?.daily_protein_g || 0}g goal</p>
+              <p className="text-lg sm:text-2xl font-black text-vitality-slate tabular-nums">{dailyLog?.total_protein_g || 0}g</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">{userProfile?.daily_protein_g || 0}g goal</p>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-3 sm:p-4 border border-slate-600 hover:border-yellow-400/50 transition-colors">
+            <div className="glass-card p-3 sm:p-4 border-white/20 hover:border-vitality-emerald/40 transition-all group">
               <div className="flex items-center gap-2 mb-2">
-                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-lime-400" />
-                <p className="text-xs sm:text-sm text-slate-400">Progress</p>
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-vitality-lime group-hover:scale-110 transition-transform" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Progress</p>
               </div>
-              <p className="text-lg sm:text-2xl font-bold text-white">{Math.round(((dailyLog?.total_calories || 0) / (userProfile?.daily_calories || 1)) * 100)}%</p>
-              <p className="text-xs text-slate-500">Daily goal</p>
+              <p className="text-lg sm:text-2xl font-black text-vitality-slate tabular-nums">
+                {userProfile?.daily_calories ? Math.round(((dailyLog?.total_calories || 0) / userProfile.daily_calories) * 100) : 0}%
+              </p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Daily goal</p>
             </div>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-8">
-          {/* Main Chart Section */}
-          <div className="lg:col-span-7 space-y-8">
-             <div className="glass-card p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-6">
-                   <div className="w-10 h-10 bg-vitality-lime/20 rounded-full flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-vitality-emerald" />
-                   </div>
-                </div>
-                <h3 className="text-xl font-extrabold text-vitality-slate mb-8 flex items-center gap-2">
-                   Nutritional Intelligence
-                   <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-500 uppercase tracking-tighter">LIVE</span>
-                </h3>
-                <MacroDonutChart
-                  consumed={{
-                    protein: dailyLog?.total_protein_g || 0,
-                    carbs: dailyLog?.total_carbs_g || 0,
-                    fat: dailyLog?.total_fat_g || 0,
-                    calories: dailyLog?.total_calories || 0,
-                  }}
-                  goals={{
-                    protein: userProfile.daily_protein_g,
-                    carbs: userProfile.daily_carbs_g,
-                    fat: userProfile.daily_fat_g,
-                    calories: userProfile.daily_calories,
-                  }}
-                />
-             </div>
+        {activeTab === 'weekly' ? (
+          <WeeklyView userId={userId!} />
+        ) : (
+          <div className="grid lg:grid-cols-12 gap-8">
+            {/* Main Chart Section */}
+            <div className="lg:col-span-7 space-y-8">
+               <div className="glass-card p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-6">
+                     <div className="w-10 h-10 bg-vitality-lime/20 rounded-full flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-vitality-emerald" />
+                     </div>
+                  </div>
+                  <h3 className="text-xl font-extrabold text-vitality-slate mb-8 flex items-center gap-2">
+                     Nutritional Intelligence
+                     <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-500 uppercase tracking-tighter">LIVE</span>
+                  </h3>
+                  <MacroDonutChart
+                    consumed={{
+                      protein: dailyLog?.total_protein_g || 0,
+                      carbs: dailyLog?.total_carbs_g || 0,
+                      fat: dailyLog?.total_fat_g || 0,
+                      calories: dailyLog?.total_calories || 0,
+                    }}
+                    goals={{
+                      protein: userProfile.daily_protein_g,
+                      carbs: userProfile.daily_carbs_g,
+                      fat: userProfile.daily_fat_g,
+                      calories: userProfile.daily_calories,
+                    }}
+                  />
+               </div>
 
-             {/* Personal Stats Row */}
+               <WeightLogCard 
+                 currentWeight={userProfile.weight_kg} 
+                 onLog={handleLogWeight} 
+               />
+
+               {/* Personal Stats Row */}
              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="glass-card p-5 rounded-3xl flex items-center gap-4">
                    <div className="w-12 h-12 bg-vitality-lime/20 rounded-2xl flex items-center justify-center text-vitality-emerald">
                       <User className="w-6 h-6" />
                    </div>
                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase">Weight</p>
-                      <p className="text-lg font-black text-vitality-slate">75.4 <span className="text-xs font-normal">kg</span></p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Weight</p>
+                      <p className="text-lg font-black text-vitality-slate tabular-nums">{userProfile.weight_kg} <span className="text-xs font-normal">kg</span></p>
                    </div>
                 </div>
                 <div className="glass-card p-5 rounded-3xl flex items-center gap-4">
@@ -261,8 +365,8 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                       <Activity className="w-6 h-6" />
                    </div>
                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase">TDEE</p>
-                      <p className="text-lg font-black text-vitality-slate">2,450 <span className="text-xs font-normal">kcal</span></p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">TDEE</p>
+                      <p className="text-lg font-black text-vitality-slate tabular-nums">{Math.round(userProfile.daily_calories)} <span className="text-xs font-normal">kcal</span></p>
                    </div>
                 </div>
                 <div className="glass-card p-5 rounded-3xl flex items-center gap-4 hidden md:flex">
@@ -270,8 +374,8 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                       <Zap className="w-6 h-6" />
                    </div>
                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase">Goal</p>
-                      <p className="text-lg font-black text-vitality-slate">Lose Fat</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Goal</p>
+                      <p className="text-lg font-black text-vitality-slate uppercase text-[10px]">{userProfile.goal_type.replace('_', ' ')}</p>
                    </div>
                 </div>
              </div>
@@ -279,6 +383,12 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
 
           {/* Meals Section */}
           <div className="lg:col-span-5 space-y-6">
+            <WaterTracker 
+              currentMl={dailyLog?.water_ml || 0}
+              goalMl={dailyLog?.water_goal_ml || 2500}
+              onAdd={handleUpdateWater}
+            />
+            
             <h3 className="text-xl font-extrabold text-vitality-slate flex items-center gap-2 px-2">
                Daily Timeline
                <div className="h-px bg-slate-200 flex-grow ml-4"></div>
@@ -288,29 +398,37 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                 title="Breakfast"
                 meals={getMealsByType('breakfast')}
                 totalCalories={getMealTypeCalories('breakfast')}
+                onDeleteMeal={handleDeleteMeal}
+                onSaveTemplate={handleSaveTemplate}
               />
               <MealSection
                 title="Lunch"
                 meals={getMealsByType('lunch')}
                 totalCalories={getMealTypeCalories('lunch')}
+                onDeleteMeal={handleDeleteMeal}
+                onSaveTemplate={handleSaveTemplate}
               />
               <MealSection
                 title="Dinner"
                 meals={getMealsByType('dinner')}
                 totalCalories={getMealTypeCalories('dinner')}
+                onDeleteMeal={handleDeleteMeal}
+                onSaveTemplate={handleSaveTemplate}
               />
               <MealSection
                 title="Snacks"
                 meals={getMealsByType('snacks')}
                 totalCalories={getMealTypeCalories('snacks')}
+                onDeleteMeal={handleDeleteMeal}
+                onSaveTemplate={handleSaveTemplate}
               />
             </div>
           </div>
-        </div>
+        )}
       </main>
 
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-4 z-50">
+      {/* Floating Action Buttons (Desktop Only) */}
+      <div className="hidden md:flex fixed bottom-8 left-1/2 -translate-x-1/2 gap-4 z-50">
         <button
           onClick={() => setShowPhotoUpload(true)}
           className="group flex items-center gap-3 px-6 h-16 bg-white/80 backdrop-blur-xl border border-white/50 text-vitality-slate rounded-3xl shadow-2xl hover:bg-white transition-all hover:scale-105 active:scale-95"
@@ -326,6 +444,12 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
           <span className="font-bold">Add Entry</span>
         </button>
       </div>
+
+      <BottomNav 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        onAddClick={() => setShowAddMealDialog(true)} 
+      />
 
       <PhotoUploadModal
         open={showPhotoUpload}
@@ -355,6 +479,14 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
         open={showAddMealDialog}
         onClose={() => setShowAddMealDialog(false)}
         onAdd={handleAddMeal}
+        templates={templates}
+        onScanClick={() => setShowBarcodeScanner(true)}
+      />
+
+      <BarcodeScanner 
+        open={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onDetected={handleBarcodeDetected}
       />
     </div>
   );

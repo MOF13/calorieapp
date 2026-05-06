@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Barcode } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,9 +17,11 @@ interface AddMealDialogProps {
     carbs_g: number;
     fat_g: number;
   }) => void;
+  templates?: any[];
+  onScanClick?: () => void;
 }
 
-export function AddMealDialog({ open, onClose, onAdd }: AddMealDialogProps) {
+export function AddMealDialog({ open, onClose, onAdd, templates = [], onScanClick }: AddMealDialogProps) {
   const [name, setName] = useState('');
   const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snacks'>('breakfast');
   const [calories, setCalories] = useState('');
@@ -46,12 +49,50 @@ export function AddMealDialog({ open, onClose, onAdd }: AddMealDialogProps) {
     onClose();
   };
 
+  const applyTemplate = (template: any) => {
+    setName(template.name);
+    setMealType(template.meal_type);
+    setCalories(template.calories.toString());
+    setProtein(template.protein_g.toString());
+    setCarbs(template.carbs_g.toString());
+    setFat(template.fat_g.toString());
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add Meal</DialogTitle>
+          {onScanClick && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onScanClick}
+              className="absolute right-12 top-6 border-vitality-emerald/30 text-vitality-emerald hover:bg-vitality-lime/10"
+            >
+              <Barcode className="w-4 h-4 mr-2" />
+              Scan Barcode
+            </Button>
+          )}
         </DialogHeader>
+
+        {templates.length > 0 && (
+          <div className="space-y-3 px-1">
+            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quick Add Favorites</Label>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {templates.slice(0, 5).map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => applyTemplate(template)}
+                  className="flex-shrink-0 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl hover:bg-vitality-lime/10 hover:border-vitality-emerald/30 transition-all text-left"
+                >
+                  <p className="text-xs font-bold text-vitality-slate truncate max-w-[100px]">{template.name}</p>
+                  <p className="text-[10px] text-slate-400">{template.calories} kcal</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
