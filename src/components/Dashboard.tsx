@@ -317,9 +317,9 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
         <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-vitality-slate mb-2">
-              {getGreeting()}, <span className="text-vitality-emerald">{(profile as any).full_name?.split(' ')[0] || 'Athlete'}</span>
+              {getGreeting()}, <span className="text-vitality-emerald">{profile?.full_name?.split(' ')[0] || 'Athlete'}</span>
             </h1>
-            <p className="text-slate-500 font-medium">Ready to hit your nutritional goals today?</p>
+            <p className="text-slate-500 font-medium">{t('dashboard.stats_description') || 'Ready to hit your nutritional goals today?'}</p>
           </div>
           
           <div className="glass-card p-2 rounded-2xl flex items-center gap-1 shadow-sm">
@@ -346,17 +346,17 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
         </div>
 
         {activeTab === 'weekly' ? (
-          <WeeklyView userId={userId!} />
+          <WeeklyView userId={userId || ''} />
         ) : activeTab === 'coach' ? (
-          <NutriChat userId={userId!} userProfile={profile} />
+          <NutriChat userId={userId || ''} userProfile={profile} />
         ) : activeTab === 'profile' ? (
           <div className="max-w-md mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4">
              <div className="glass-card p-8 rounded-[2.5rem] text-center">
                 <div className="w-24 h-24 bg-vitality-lime/20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-vitality-emerald">
                    <User className="w-12 h-12" />
                 </div>
-                <h2 className="text-2xl font-black text-vitality-slate">{profile.full_name}</h2>
-                <p className="text-slate-400 font-medium">{profile.email}</p>
+                <h2 className="text-2xl font-black text-vitality-slate">{profile?.full_name || 'Athlete'}</h2>
+                <p className="text-slate-400 font-medium">{profile?.email || 'No email set'}</p>
              </div>
 
              <div className="glass-card p-8 rounded-[2.5rem] space-y-6">
