@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Utensils, ChevronLeft, ChevronRight, Plus, LogOut, Camera, Calendar, User, Zap, Activity, Flame, TrendingUp, Target } from 'lucide-react';
+import { Utensils, ChevronLeft, ChevronRight, Plus, LogOut, Camera, Calendar, User, Zap, Activity, Flame, TrendingUp, Target, Share2, Trophy } from 'lucide-react';
 import { format, addDays, subDays, isAfter, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { MacroDonutChart } from './dashboard/MacroDonutChart';
@@ -7,13 +7,16 @@ import { MealSection } from './dashboard/MealSection';
 import { AddMealDialog } from './dashboard/AddMealDialog';
 import { PhotoUploadModal } from './PhotoUploadModal';
 import { FoodResultsScreen } from './FoodResultsScreen';
-import { getUserProfile, getOrCreateDailyLog, getMeals, createMeal, deleteMeal, updateWaterIntake, logWeight, getMealTemplates, createMealTemplate } from '@/lib/db';
+import { getUserProfile, getOrCreateDailyLog, getMeals, createMeal, deleteMeal, updateWaterIntake, logWeight, getMealTemplates, createMealTemplate, checkAndUnlockAchievements } from '@/lib/db';
+import { WeightLogCard } from './dashboard/WeightLogCard';
+import { BarcodeScanner } from './dashboard/BarcodeScanner';
+import { MealAdvisorCard } from './dashboard/MealAdvisorCard';
+import { SocialShareCard } from './dashboard/SocialShareCard';
+import { AchievementsView } from './dashboard/AchievementsView';
 import { DashboardSkeleton } from './dashboard/DashboardSkeleton';
 import { WaterTracker } from './dashboard/WaterTracker';
 import { BottomNav } from './dashboard/BottomNav';
 import { WeeklyView } from './dashboard/WeeklyView';
-import { WeightLogCard } from './dashboard/WeightLogCard';
-import { BarcodeScanner } from './dashboard/BarcodeScanner';
 import { signOut } from '@/lib/auth';
 import type { UserProfile, DailyLog, Meal, MealTemplate } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -36,6 +39,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<any | null>(null);
+  const [showShareCard, setShowShareCard] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -71,6 +75,22 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
     if (log) {
       const logMeals = await getMeals(log.id);
       setMeals(logMeals);
+
+      // Check for achievements
+      if (userId && userProfile) {
+        const unlocked = await checkAndUnlockAchievements(userId, {
+          streak: userProfile.current_streak || 0,
+          totalMeals: logMeals.length, // Just current day for now, or fetch total
+          waterToday: log.water_ml || 0,
+          waterGoal: log.water_goal_ml || 2500,
+        });
+
+        if (unlocked.length > 0) {
+          unlocked.forEach(type => toast.success(`Achievement Unlocked: ${type.replace('_', ' ')}!`, {
+            icon: <Trophy className="w-5 h-5 text-vitality-amber" />
+          }));
+        }
+      }
     }
   };
 
@@ -316,6 +336,8 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
 
         {activeTab === 'weekly' ? (
           <WeeklyView userId={userId!} />
+        ) : activeTab === 'achievements' ? (
+          <AchievementsView userId={userId!} />
         ) : (
           <div className="grid lg:grid-cols-12 gap-8">
             {/* Main Chart Section */}
@@ -326,10 +348,21 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                         <Calendar className="w-5 h-5 text-vitality-emerald" />
                      </div>
                   </div>
-                  <h3 className="text-xl font-extrabold text-vitality-slate mb-8 flex items-center gap-2">
-                     Nutritional Intelligence
-                     <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-500 uppercase tracking-tighter">LIVE</span>
-                  </h3>
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-xl font-extrabold text-vitality-slate flex items-center gap-2">
+                       Nutritional Intelligence
+                       <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-500 uppercase tracking-tighter">LIVE</span>
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowShareCard(true)}
+                      className="text-vitality-emerald hover:bg-vitality-lime/10 font-bold text-xs gap-2"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Share Progress
+                    </Button>
+                  </div>
                   <MacroDonutChart
                     consumed={{
                       protein: dailyLog?.total_protein_g || 0,
@@ -389,6 +422,14 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
               currentMl={dailyLog?.water_ml || 0}
               goalMl={dailyLog?.water_goal_ml || 2500}
               onAdd={handleUpdateWater}
+            />
+
+            <MealAdvisorCard 
+              remainingCalories={Math.max(0, Math.round(userProfile.daily_calories - (dailyLog?.total_calories || 0)))}
+              remainingProtein={Math.max(0, Math.round(userProfile.daily_protein_g - (dailyLog?.total_protein_g || 0)))}
+              remainingCarbs={Math.max(0, Math.round(userProfile.daily_carbs_g - (dailyLog?.total_carbs_g || 0)))}
+              remainingFat={Math.max(0, Math.round(userProfile.daily_fat_g - (dailyLog?.total_fat_g || 0)))}
+              onLogMeal={handleAddMeal}
             />
             
             <h3 className="text-xl font-extrabold text-vitality-slate flex items-center gap-2 px-2">
@@ -495,6 +536,23 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
         onClose={() => setShowBarcodeScanner(false)}
         onDetected={handleBarcodeDetected}
       />
+
+      {userProfile && (
+        <SocialShareCard
+          open={showShareCard}
+          onClose={() => setShowShareCard(false)}
+          data={{
+            calories: dailyLog?.total_calories || 0,
+            protein: dailyLog?.total_protein_g || 0,
+            carbs: dailyLog?.total_carbs_g || 0,
+            fat: dailyLog?.total_fat_g || 0,
+            goal: userProfile.daily_calories,
+            streak: userProfile.current_streak || 0,
+            userName: (userProfile as any).full_name || 'Athlete',
+            date: format(currentDate, 'MMMM d, yyyy'),
+          }}
+        />
+      )}
     </div>
   );
 }

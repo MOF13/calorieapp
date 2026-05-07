@@ -1,4 +1,4 @@
-import { BarChart3, Home, Plus, User, Target } from 'lucide-react';
+import { BarChart3, Home, Plus, User, Trophy } from 'lucide-react';
 
 interface BottomNavProps {
   activeTab: string;
@@ -10,7 +10,7 @@ export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps
   const tabs = [
     { id: 'today', icon: Home, label: 'Today' },
     { id: 'weekly', icon: BarChart3, label: 'Weekly' },
-    { id: 'goals', icon: Target, label: 'Goals' },
+    { id: 'achievements', icon: Trophy, label: 'Badges' },
     { id: 'profile', icon: User, label: 'Profile' },
   ];
 

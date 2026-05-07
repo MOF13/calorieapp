@@ -309,3 +309,39 @@ export async function getWeeklyLogs(userId: string): Promise<any[]> {
   }
   return data || [];
 }
+
+export async function getAchievements(userId: string): Promise<any[]> {
+  const { data, error } = await supabase
+    .from('user_achievements')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching achievements:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function checkAndUnlockAchievements(userId: string, context: { streak: number, totalMeals: number, waterToday: number, waterGoal: number }): Promise<string[]> {
+  const unlocked: string[] = [];
+  const currentAchievements = await getAchievements(userId);
+  const types = currentAchievements.map(a => a.achievement_type);
+
+  const check = async (type: string, condition: boolean) => {
+    if (condition && !types.includes(type)) {
+      const { error } = await supabase
+        .from('user_achievements')
+        .insert({ user_id: userId, achievement_type: type });
+      
+      if (!error) unlocked.push(type);
+    }
+  };
+
+  // Conditions
+  await check('HYDRATION_HERO', context.waterToday >= context.waterGoal);
+  await check('STREAK_7', context.streak >= 7);
+  await check('MEAL_MASTER', context.totalMeals >= 50);
+
+  return unlocked;
+}

@@ -58,6 +58,13 @@ export interface Meal {
   created_at: string;
 }
 
+export interface Achievement {
+  id: string;
+  user_id: string;
+  achievement_type: string;
+  unlocked_at: string;
+}
+
 export interface WeightLog {
   id: string;
   user_id: string;
