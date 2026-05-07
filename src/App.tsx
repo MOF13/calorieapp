@@ -14,6 +14,7 @@ function App() {
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<any | null>(null);
 
   useEffect(() => {
     initializeApp();
@@ -28,6 +29,7 @@ function App() {
         const profile = await getUserProfile(user.id);
 
         if (profile) {
+          setUserProfile(profile);
           setCurrentView('dashboard');
         } else {
           setCurrentView('onboarding');
@@ -71,6 +73,7 @@ function App() {
       const profile = await getUserProfile(user.id);
 
       if (profile) {
+        setUserProfile(profile);
         setCurrentView('dashboard');
       } else {
         setCurrentView('onboarding');
@@ -132,7 +135,7 @@ function App() {
     return <Onboarding onComplete={handleOnboardingComplete} userId={userId} />;
   }
 
-  return <Dashboard userId={userId} onSignOut={handleSignOut} />;
+  return <Dashboard userId={userId} userProfile={userProfile} onSignOut={handleSignOut} onProfileUpdate={setUserProfile} />;
 }
 
 export default App;

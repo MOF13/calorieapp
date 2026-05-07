@@ -23,12 +23,14 @@ import { toast } from 'sonner';
 
 interface DashboardProps {
   userId: string | null;
+  userProfile: UserProfile | null;
   onSignOut?: () => void;
+  onProfileUpdate?: (profile: UserProfile) => void;
 }
 
-export default function Dashboard({ userId, onSignOut }: DashboardProps) {
+export default function Dashboard({ userId, userProfile: initialProfile, onSignOut, onProfileUpdate }: DashboardProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(initialProfile);
   const [dailyLog, setDailyLog] = useState<DailyLog | null>(null);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [showAddMealDialog, setShowAddMealDialog] = useState(false);
@@ -58,39 +60,53 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
     if (userId) {
       loadDailyData();
     }
-  }, [userId, currentDate]);
+  }, [userId, currentDate, userProfile]);
 
   const loadUserProfile = async () => {
     if (!userId) return;
-    const profile = await getUserProfile(userId);
-    setUserProfile(profile);
+    try {
+      console.log('Loading user profile for:', userId);
+      const profile = await getUserProfile(userId);
+      console.log('User profile loaded:', profile);
+      setUserProfile(profile);
+      if (profile && onProfileUpdate) onProfileUpdate(profile);
+    } catch (error) {
+      console.error('Error in loadUserProfile:', error);
+      toast.error('Failed to load profile');
+    }
   };
 
   const loadDailyData = async () => {
     if (!userId) return;
-    const dateKey = format(currentDate, 'yyyy-MM-dd');
-    const log = await getOrCreateDailyLog(userId, dateKey);
-    setDailyLog(log);
+    try {
+      console.log('Loading daily data for:', userId, currentDate);
+      const dateKey = format(currentDate, 'yyyy-MM-dd');
+      const log = await getOrCreateDailyLog(userId, dateKey);
+      setDailyLog(log);
 
-    if (log) {
-      const logMeals = await getMeals(log.id);
-      setMeals(logMeals);
+      if (log) {
+        const logMeals = await getMeals(log.id);
+        setMeals(logMeals);
 
-      // Check for achievements
-      if (userId && userProfile) {
-        const unlocked = await checkAndUnlockAchievements(userId, {
-          streak: userProfile.current_streak || 0,
-          totalMeals: logMeals.length, // Just current day for now, or fetch total
-          waterToday: log.water_ml || 0,
-          waterGoal: log.water_goal_ml || 2500,
-        });
+        // Check for achievements
+        if (userId && userProfile) {
+          console.log('Checking achievements...');
+          const unlocked = await checkAndUnlockAchievements(userId, {
+            streak: userProfile.current_streak || 0,
+            totalMeals: logMeals.length,
+            waterToday: log.water_ml || 0,
+            waterGoal: log.water_goal_ml || 2500,
+          });
 
-        if (unlocked.length > 0) {
-          unlocked.forEach(type => toast.success(`Achievement Unlocked: ${type.replace('_', ' ')}!`, {
-            icon: <Trophy className="w-5 h-5 text-vitality-amber" />
-          }));
+          if (unlocked.length > 0) {
+            unlocked.forEach(type => toast.success(`Achievement Unlocked: ${type.replace('_', ' ')}!`, {
+              icon: <Trophy className="w-5 h-5 text-vitality-amber" />
+            }));
+          }
         }
       }
+    } catch (error) {
+      console.error('Error in loadDailyData:', error);
     }
   };
 
@@ -194,9 +210,13 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
     return getMealsByType(type).reduce((sum: number, meal) => sum + (meal.calories || 0), 0);
   };
 
-  if (!userProfile) {
+  if (!userProfile && !initialProfile) {
     return <DashboardSkeleton />;
   }
+
+  // Use current profile or initial profile
+  const profile = userProfile || initialProfile;
+  if (!profile) return <DashboardSkeleton />;
 
   return (
     <div className="min-h-screen pb-24">
@@ -216,7 +236,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-vitality-lime/10 rounded-full border border-vitality-emerald/20">
                 <Zap className="w-4 h-4 text-vitality-emerald" />
                 <span className="text-xs font-bold text-vitality-emerald uppercase tracking-wider">
-                  STREAK: {userProfile?.current_streak || 0} DAYS
+                  STREAK: {profile?.current_streak || 0} DAYS
                 </span>
               </div>
               <Button
@@ -240,7 +260,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
         <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-vitality-slate mb-2">
-              {getGreeting()}, <span className="text-vitality-emerald">{(userProfile as any).full_name?.split(' ')[0] || 'Athlete'}</span>
+              {getGreeting()}, <span className="text-vitality-emerald">{(profile as any).full_name?.split(' ')[0] || 'Athlete'}</span>
             </h1>
             <p className="text-slate-500 font-medium">Ready to hit your nutritional goals today?</p>
           </div>
@@ -267,24 +287,24 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
               </Button>
           </div>
 
-          {userProfile && dailyLog && (
+          {profile && dailyLog && (
             <div className={`mb-6 p-4 rounded-3xl border flex items-center justify-between transition-all ${
-              (userProfile.daily_calories - dailyLog.total_calories) >= 0
+              (profile.daily_calories - dailyLog.total_calories) >= 0
                 ? 'bg-vitality-emerald/10 border-vitality-emerald/20 text-vitality-emerald'
                 : 'bg-red-50 border-red-100 text-red-600'
             }`}>
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                  (userProfile.daily_calories - dailyLog.total_calories) >= 0 ? 'bg-vitality-emerald/20' : 'bg-red-100'
+                  (profile.daily_calories - dailyLog.total_calories) >= 0 ? 'bg-vitality-emerald/20' : 'bg-red-100'
                 }`}>
                   <Zap className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest opacity-70">Remaining Balance</p>
                   <p className="text-xl font-black tabular-nums">
-                    {Math.abs(Math.round(userProfile.daily_calories - dailyLog.total_calories))} kcal 
+                    {Math.abs(Math.round(profile.daily_calories - dailyLog.total_calories))} kcal 
                     <span className="text-sm font-bold ml-2">
-                      {(userProfile.daily_calories - dailyLog.total_calories) >= 0 ? 'LEFT' : 'OVER LIMIT'}
+                      {(profile.daily_calories - dailyLog.total_calories) >= 0 ? 'LEFT' : 'OVER LIMIT'}
                     </span>
                   </p>
                 </div>
@@ -293,9 +313,9 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                  <div className="h-1.5 w-32 bg-black/5 rounded-full overflow-hidden">
                     <div 
                       className={`h-full transition-all duration-1000 ${
-                        (userProfile.daily_calories - dailyLog.total_calories) >= 0 ? 'bg-vitality-emerald' : 'bg-red-500'
+                        (profile.daily_calories - dailyLog.total_calories) >= 0 ? 'bg-vitality-emerald' : 'bg-red-500'
                       }`}
-                      style={{ width: `${Math.min(100, ((dailyLog.total_calories || 0) / userProfile.daily_calories) * 100)}%` }}
+                      style={{ width: `${Math.min(100, ((dailyLog.total_calories || 0) / profile.daily_calories) * 100)}%` }}
                     ></div>
                  </div>
               </div>
@@ -309,7 +329,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Calories</p>
               </div>
               <p className="text-lg sm:text-2xl font-black text-vitality-slate tabular-nums">{dailyLog?.total_calories || 0}</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">{Math.round(userProfile?.daily_calories || 0)} goal</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">{Math.round(profile?.daily_calories || 0)} goal</p>
             </div>
 
             <div className="glass-card p-3 sm:p-4 border-white/20 hover:border-vitality-emerald/40 transition-all group">
@@ -318,7 +338,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Protein</p>
               </div>
               <p className="text-lg sm:text-2xl font-black text-vitality-slate tabular-nums">{dailyLog?.total_protein_g || 0}g</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">{userProfile?.daily_protein_g || 0}g goal</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">{profile?.daily_protein_g || 0}g goal</p>
             </div>
 
             <div className="glass-card p-3 sm:p-4 border-white/20 hover:border-vitality-emerald/40 transition-all group">
@@ -327,7 +347,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Progress</p>
               </div>
               <p className="text-lg sm:text-2xl font-black text-vitality-slate tabular-nums">
-                {userProfile?.daily_calories ? Math.round(((dailyLog?.total_calories || 0) / userProfile.daily_calories) * 100) : 0}%
+                {profile?.daily_calories ? Math.round(((dailyLog?.total_calories || 0) / profile.daily_calories) * 100) : 0}%
               </p>
               <p className="text-[10px] font-bold text-slate-400 uppercase">Daily goal</p>
             </div>
@@ -371,16 +391,16 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                       calories: dailyLog?.total_calories || 0,
                     }}
                     goals={{
-                      protein: userProfile.daily_protein_g,
-                      carbs: userProfile.daily_carbs_g,
-                      fat: userProfile.daily_fat_g,
-                      calories: userProfile.daily_calories,
+                      protein: profile.daily_protein_g,
+                      carbs: profile.daily_carbs_g,
+                      fat: profile.daily_fat_g,
+                      calories: profile.daily_calories,
                     }}
                   />
                </div>
 
                <WeightLogCard 
-                 currentWeight={userProfile.weight_kg} 
+                 currentWeight={profile.weight_kg} 
                  onLog={handleLogWeight} 
                />
 
@@ -392,7 +412,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                    </div>
                    <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Weight</p>
-                      <p className="text-lg font-black text-vitality-slate tabular-nums">{userProfile.weight_kg} <span className="text-xs font-normal">kg</span></p>
+                      <p className="text-lg font-black text-vitality-slate tabular-nums">{profile.weight_kg} <span className="text-xs font-normal">kg</span></p>
                    </div>
                 </div>
                 <div className="glass-card p-5 rounded-3xl flex items-center gap-4">
@@ -401,7 +421,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                    </div>
                    <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">TDEE</p>
-                      <p className="text-lg font-black text-vitality-slate tabular-nums">{Math.round(userProfile.daily_calories)} <span className="text-xs font-normal">kcal</span></p>
+                      <p className="text-lg font-black text-vitality-slate tabular-nums">{Math.round(profile.daily_calories)} <span className="text-xs font-normal">kcal</span></p>
                    </div>
                 </div>
                 <div className="glass-card p-5 rounded-3xl flex items-center gap-4 hidden md:flex">
@@ -410,7 +430,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                    </div>
                    <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Goal</p>
-                      <p className="text-lg font-black text-vitality-slate uppercase text-[10px]">{userProfile.goal_type.replace('_', ' ')}</p>
+                      <p className="text-lg font-black text-vitality-slate uppercase text-[10px]">{profile.goal_type.replace('_', ' ')}</p>
                    </div>
                 </div>
              </div>
@@ -425,10 +445,10 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
             />
 
             <MealAdvisorCard 
-              remainingCalories={Math.max(0, Math.round(userProfile.daily_calories - (dailyLog?.total_calories || 0)))}
-              remainingProtein={Math.max(0, Math.round(userProfile.daily_protein_g - (dailyLog?.total_protein_g || 0)))}
-              remainingCarbs={Math.max(0, Math.round(userProfile.daily_carbs_g - (dailyLog?.total_carbs_g || 0)))}
-              remainingFat={Math.max(0, Math.round(userProfile.daily_fat_g - (dailyLog?.total_fat_g || 0)))}
+              remainingCalories={Math.max(0, Math.round(profile.daily_calories - (dailyLog?.total_calories || 0)))}
+              remainingProtein={Math.max(0, Math.round(profile.daily_protein_g - (dailyLog?.total_protein_g || 0)))}
+              remainingCarbs={Math.max(0, Math.round(profile.daily_carbs_g - (dailyLog?.total_carbs_g || 0)))}
+              remainingFat={Math.max(0, Math.round(profile.daily_fat_g - (dailyLog?.total_fat_g || 0)))}
               onLogMeal={handleAddMeal}
             />
             
@@ -537,7 +557,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
         onDetected={handleBarcodeDetected}
       />
 
-      {userProfile && (
+      {profile && (
         <SocialShareCard
           open={showShareCard}
           onClose={() => setShowShareCard(false)}
@@ -546,9 +566,9 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
             protein: dailyLog?.total_protein_g || 0,
             carbs: dailyLog?.total_carbs_g || 0,
             fat: dailyLog?.total_fat_g || 0,
-            goal: userProfile.daily_calories,
-            streak: userProfile.current_streak || 0,
-            userName: (userProfile as any).full_name || 'Athlete',
+            goal: profile.daily_calories,
+            streak: profile.current_streak || 0,
+            userName: (profile as any).full_name || 'Athlete',
             date: format(currentDate, 'MMMM d, yyyy'),
           }}
         />
