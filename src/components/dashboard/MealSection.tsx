@@ -1,10 +1,11 @@
-import { Plus, Coffee, Sun, Flame, Cookie, ChevronRight, Bookmark } from 'lucide-react';
+import { Plus, Coffee, Sun, Flame, Cookie, ChevronRight, Bookmark, Pencil } from 'lucide-react';
 
 interface MealSectionProps {
   title: string;
   meals: any[];
   totalCalories: number;
   onDeleteMeal?: (mealId: string) => void;
+  onEditMeal?: (meal: any) => void;
   onSaveTemplate?: (meal: any) => void;
 }
 
@@ -15,7 +16,7 @@ const mealIcons: Record<string, { icon: any; color: string; bgColor: string; bor
   Snacks: { icon: Cookie, color: 'text-pink-500', bgColor: 'bg-pink-50/50', borderColor: 'border-pink-200/50' },
 };
 
-export function MealSection({ title, meals, totalCalories, onDeleteMeal, onSaveTemplate }: MealSectionProps) {
+export function MealSection({ title, meals, totalCalories, onDeleteMeal, onEditMeal, onSaveTemplate }: MealSectionProps) {
   const mealIcon = mealIcons[title];
   const IconComponent = mealIcon?.icon || Coffee;
 
@@ -71,6 +72,15 @@ export function MealSection({ title, meals, totalCalories, onDeleteMeal, onSaveT
                   <p className="text-[10px] font-bold text-slate-400 uppercase">KCAL</p>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                  {onEditMeal && (
+                    <button
+                      onClick={() => onEditMeal(meal)}
+                      className="p-2 text-slate-300 hover:text-vitality-emerald hover:bg-vitality-lime/10 rounded-lg transition-all"
+                      title="Edit Meal"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  )}
                   {onSaveTemplate && (
                     <button
                       onClick={() => onSaveTemplate(meal)}

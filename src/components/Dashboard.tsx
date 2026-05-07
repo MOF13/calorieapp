@@ -17,9 +17,15 @@ import { DashboardSkeleton } from './dashboard/DashboardSkeleton';
 import { WaterTracker } from './dashboard/WaterTracker';
 import { BottomNav } from './dashboard/BottomNav';
 import { WeeklyView } from './dashboard/WeeklyView';
+import { WeightTrendsChart } from './dashboard/WeightTrendsChart';
+import { NutriChat } from './dashboard/NutriChat';
+import { FastingTracker } from './dashboard/FastingTracker';
+import { RamadanModule } from './dashboard/RamadanModule';
 import { signOut } from '@/lib/auth';
 import type { UserProfile, DailyLog, Meal, MealTemplate } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 
 interface DashboardProps {
   userId: string | null;
@@ -29,6 +35,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ userId, userProfile: initialProfile, onSignOut, onProfileUpdate }: DashboardProps) {
+  const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [userProfile, setUserProfile] = useState<UserProfile | null>(initialProfile);
   const [dailyLog, setDailyLog] = useState<DailyLog | null>(null);
@@ -41,6 +48,8 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<any | null>(null);
+  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
+  const [weightLogs, setWeightLogs] = useState<any[]>([]);
   const [showShareCard, setShowShareCard] = useState(false);
 
   useEffect(() => {
@@ -59,8 +68,16 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
   useEffect(() => {
     if (userId) {
       loadDailyData();
+      loadWeightHistory();
     }
   }, [userId, currentDate, userProfile]);
+
+  const loadWeightHistory = async () => {
+    if (!userId) return;
+    const { getWeightLogs } = await import('@/lib/db');
+    const logs = await getWeightLogs(userId, 7);
+    setWeightLogs(logs);
+  };
 
   const loadUserProfile = async () => {
     if (!userId) return;
@@ -123,9 +140,16 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 18) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return t('dashboard.greeting');
+    if (hour < 18) return t('dashboard.greeting_afternoon');
+    return t('dashboard.greeting_evening');
+  };
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'en' ? 'ar' : 'en';
+    i18n.changeLanguage(newLang);
+    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = newLang;
   };
 
   const handleAddMeal = async (meal: {
@@ -156,8 +180,29 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
     if (!userId) return;
     const success = await deleteMeal(mealId);
     if (success) {
+      toast.success('Meal removed');
       await loadDailyData();
     }
+  };
+
+  const handleUpdateMeal = async (meal: {
+    name: string;
+    meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snacks';
+    calories: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+  }) => {
+    if (!editingMeal) return;
+    
+    const { updateMeal } = await import('@/lib/db');
+    const updated = await updateMeal(editingMeal.id, meal);
+    
+    if (updated) {
+      toast.success('Meal updated');
+      await loadDailyData();
+    }
+    setEditingMeal(null);
   };
 
   const handleUpdateWater = async (amount: number) => {
@@ -191,6 +236,15 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
     if (template) {
       toast.success('Saved as template!');
       loadTemplates();
+    }
+  };
+
+  const handleToggleRamadanMode = async (enabled: boolean) => {
+    if (!userId) return;
+    const updated = await updateUserProfile(userId, { is_ramadan_mode: enabled });
+    if (updated) {
+      setUserProfile(updated);
+      toast.success(enabled ? 'Ramadan Mode Enabled 🌙' : 'Ramadan Mode Disabled');
     }
   };
 
@@ -229,6 +283,14 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
             </div>
             
             <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleLanguage}
+                className="font-bold text-vitality-emerald hover:bg-vitality-lime/10 rounded-xl"
+              >
+                {i18n.language === 'en' ? 'العربية' : 'English'}
+              </Button>
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-vitality-lime/10 rounded-full border border-vitality-emerald/20">
                 <Zap className="w-4 h-4 text-vitality-emerald" />
                 <span className="text-xs font-bold text-vitality-emerald uppercase tracking-wider">
@@ -244,7 +306,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
                 className="bg-white/50 backdrop-blur-sm border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
+                {t('actions.delete').replace('Delete', 'Sign Out')}
               </Button>
             </div>
           </div>
@@ -283,8 +345,10 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
           </div>
         </div>
 
-        {activeTab === 'weekly' ? (
+        ) : activeTab === 'weekly' ? (
           <WeeklyView userId={userId!} />
+        ) : activeTab === 'coach' ? (
+          <NutriChat userId={userId!} userProfile={profile} />
         ) : activeTab === 'achievements' ? (
           <AchievementsView userId={userId!} />
         ) : (
@@ -307,7 +371,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
                        <p className="text-xl font-black tabular-nums">
                          {Math.abs(Math.round(profile.daily_calories - dailyLog.total_calories))} kcal 
                          <span className="text-sm font-bold ml-2">
-                           {(profile.daily_calories - dailyLog.total_calories) >= 0 ? 'LEFT' : 'OVER LIMIT'}
+                           {(profile.daily_calories - dailyLog.total_calories) >= 0 ? t('dashboard.left') : t('dashboard.over')}
                          </span>
                        </p>
                      </div>
@@ -323,7 +387,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
                   </div>
                   <div className="flex items-center justify-between mb-8">
                     <h3 className="text-xl font-extrabold text-vitality-slate flex items-center gap-2">
-                       Nutritional Intelligence
+                       {t('dashboard.intelligence')}
                        <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-500 uppercase tracking-tighter">LIVE</span>
                     </h3>
                     <Button
@@ -349,6 +413,19 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
                       fat: profile.daily_fat_g,
                       calories: profile.daily_calories,
                     }}
+                  />
+               </div>
+
+               <div className="glass-card p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-extrabold text-vitality-slate">Weight Journey</h3>
+                    <div className="px-3 py-1 bg-vitality-lime/20 rounded-lg text-[10px] font-black text-vitality-emerald uppercase tracking-widest">
+                       Last 7 Days
+                    </div>
+                  </div>
+                  <WeightTrendsChart 
+                    data={weightLogs} 
+                    targetWeight={profile.target_weight_kg} 
                   />
                </div>
 
@@ -386,6 +463,14 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
               onAdd={handleUpdateWater}
             />
 
+            <RamadanModule 
+              userId={userId!} 
+              isRamadanMode={profile.is_ramadan_mode || false}
+              onToggle={handleToggleRamadanMode}
+            />
+
+            <FastingTracker userId={userId!} />
+
             <MealAdvisorCard 
               remainingCalories={Math.max(0, Math.round(profile.daily_calories - (dailyLog?.total_calories || 0)))}
               remainingProtein={Math.max(0, Math.round(profile.daily_protein_g - (dailyLog?.total_protein_g || 0)))}
@@ -398,32 +483,48 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
                Daily Timeline
             </h3>
             <div className="space-y-6">
-              <MealSection
-                title="Breakfast"
+               <MealSection
+                title={t('food.breakfast')}
                 meals={getMealsByType('breakfast')}
                 totalCalories={getMealTypeCalories('breakfast')}
                 onDeleteMeal={handleDeleteMeal}
+                onEditMeal={(meal) => {
+                  setEditingMeal(meal);
+                  setShowAddMealDialog(true);
+                }}
                 onSaveTemplate={handleSaveTemplate}
               />
               <MealSection
-                title="Lunch"
+                title={t('food.lunch')}
                 meals={getMealsByType('lunch')}
                 totalCalories={getMealTypeCalories('lunch')}
                 onDeleteMeal={handleDeleteMeal}
+                onEditMeal={(meal) => {
+                  setEditingMeal(meal);
+                  setShowAddMealDialog(true);
+                }}
                 onSaveTemplate={handleSaveTemplate}
               />
               <MealSection
-                title="Dinner"
+                title={t('food.dinner')}
                 meals={getMealsByType('dinner')}
                 totalCalories={getMealTypeCalories('dinner')}
                 onDeleteMeal={handleDeleteMeal}
+                onEditMeal={(meal) => {
+                  setEditingMeal(meal);
+                  setShowAddMealDialog(true);
+                }}
                 onSaveTemplate={handleSaveTemplate}
               />
               <MealSection
-                title="Snacks"
+                title={t('food.snacks')}
                 meals={getMealsByType('snacks')}
                 totalCalories={getMealTypeCalories('snacks')}
                 onDeleteMeal={handleDeleteMeal}
+                onEditMeal={(meal) => {
+                  setEditingMeal(meal);
+                  setShowAddMealDialog(true);
+                }}
                 onSaveTemplate={handleSaveTemplate}
               />
             </div>
@@ -484,10 +585,11 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
         onClose={() => {
           setShowAddMealDialog(false);
           setScannedProduct(null);
+          setEditingMeal(null);
         }}
-        onAdd={handleAddMeal}
+        onAdd={editingMeal ? handleUpdateMeal : handleAddMeal}
         templates={templates}
-        initialData={scannedProduct}
+        initialData={editingMeal || scannedProduct}
         onScanClick={() => setShowBarcodeScanner(true)}
       />
 

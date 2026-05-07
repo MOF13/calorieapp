@@ -345,3 +345,169 @@ export async function checkAndUnlockAchievements(userId: string, context: { stre
 
   return unlocked;
 }
+
+// V2 Expansion: Food Search
+export async function searchFoods(query: string, country: 'ae' | 'global' = 'ae') {
+  // 1. Search local custom foods first
+  const { data: localFoods, error: localError } = await supabase
+    .from('custom_foods')
+    .select('*')
+    .or(`name_en.ilike.%${query}%,name_ar.ilike.%${query}%`)
+    .limit(10);
+
+  if (localError) console.error('Error searching local foods:', localError);
+
+  // 2. Search Open Food Facts API
+  try {
+    const response = await fetch(
+      `https://world.openfoodfacts.org/cgi/search.pl?` +
+      `search_terms=${encodeURIComponent(query)}` +
+      `&search_simple=1` +
+      `&action=process` +
+      `&json=1` +
+      `&fields=product_name,nutriments,serving_size,brands,image_url,id` +
+      `&lc=ar,en` +
+      `&tagtype_0=countries&tag_contains_0=contains&tag_0=${country === 'ae' ? 'United Arab Emirates' : ''}`
+    );
+    
+    if (!response.ok) throw new Error('OFF API error');
+    
+    const data = await response.json();
+    const offFoods = (data.products || []).map((p: any) => ({
+      id: `off_${p.id}`,
+      name_en: p.product_name,
+      brand: p.brands,
+      calories_per_100g: p.nutriments?.['energy-kcal_100g'] || 0,
+      protein_per_100g: p.nutriments?.proteins_100g || 0,
+      carbs_per_100g: p.nutriments?.carbohydrates_100g || 0,
+      fat_per_100g: p.nutriments?.fat_100g || 0,
+      image_url: p.image_url,
+      is_off: true
+    }));
+
+    return [...(localFoods || []), ...offFoods];
+  } catch (error) {
+    console.error('Error searching OFF:', error);
+    return localFoods || [];
+  }
+}
+
+export async function getCustomFoods(userId?: string) {
+  let query = supabase.from('custom_foods').select('*');
+  if (userId) {
+    query = query.or(`is_verified.eq.true,created_by.eq.${userId}`);
+  } else {
+    query = query.eq('is_verified', true);
+  }
+  
+  const { data, error } = await query.order('name_en');
+  if (error) console.error('Error fetching custom foods:', error);
+  return data || [];
+}
+
+export async function createCustomFood(food: any) {
+  const { data, error } = await supabase
+    .from('custom_foods')
+    .insert(food)
+    .select()
+    .single();
+  
+  if (error) console.error('Error creating custom food:', error);
+  return data;
+}
+
+// V2 Expansion: Fasting
+export async function getFastingSessions(userId: string) {
+  const { data, error } = await supabase
+    .from('fasting_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('start_time', { ascending: false });
+  
+  if (error) console.error('Error fetching fasting sessions:', error);
+  return data || [];
+}
+
+export async function createFastingSession(session: any) {
+  const { data, error } = await supabase
+    .from('fasting_sessions')
+    .insert(session)
+    .select()
+    .single();
+  
+  if (error) console.error('Error creating fasting session:', error);
+  return data;
+}
+
+export async function updateFastingSession(sessionId: string, updates: any) {
+  const { data, error } = await supabase
+    .from('fasting_sessions')
+    .update(updates)
+    .eq('id', sessionId)
+    .select()
+    .single();
+  
+  if (error) console.error('Error updating fasting session:', error);
+  return data;
+}
+
+// V2 Expansion: Exercise
+export async function getExerciseLogs(userId: string, date?: string) {
+  let query = supabase.from('exercise_logs').select('*').eq('user_id', userId);
+  
+  if (date) {
+    const start = `${date}T00:00:00Z`;
+    const end = `${date}T23:59:59Z`;
+    query = query.gte('logged_at', start).lte('logged_at', end);
+  }
+  
+  const { data, error } = await query.order('logged_at', { ascending: false });
+  if (error) console.error('Error fetching exercise logs:', error);
+  return data || [];
+}
+
+export async function createExerciseLog(log: any) {
+  const { data, error } = await supabase
+    .from('exercise_logs')
+    .insert(log)
+    .select()
+    .single();
+  
+  if (error) console.error('Error creating exercise log:', error);
+  return data;
+}
+
+// V2 Expansion: Recipes
+export async function getRecipes(tags?: string[]) {
+  let query = supabase.from('recipes').select('*');
+  if (tags && tags.length > 0) {
+    query = query.contains('tags', tags);
+  }
+  
+  const { data, error } = await query.order('is_featured', { ascending: false });
+  if (error) console.error('Error fetching recipes:', error);
+  return data || [];
+}
+
+// V2 Expansion: NutriChat
+export async function getNutriChatMessages(userId: string) {
+  const { data, error } = await supabase
+    .from('nutrichat_messages')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true });
+  
+  if (error) console.error('Error fetching chat messages:', error);
+  return data || [];
+}
+
+export async function createNutriChatMessage(message: any) {
+  const { data, error } = await supabase
+    .from('nutrichat_messages')
+    .insert(message)
+    .select()
+    .single();
+  
+  if (error) console.error('Error creating chat message:', error);
+  return data;
+}
