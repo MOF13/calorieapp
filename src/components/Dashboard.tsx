@@ -345,10 +345,54 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
           </div>
         </div>
 
-        ) : activeTab === 'weekly' ? (
+        {activeTab === 'weekly' ? (
           <WeeklyView userId={userId!} />
         ) : activeTab === 'coach' ? (
           <NutriChat userId={userId!} userProfile={profile} />
+        ) : activeTab === 'profile' ? (
+          <div className="max-w-md mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4">
+             <div className="glass-card p-8 rounded-[2.5rem] text-center">
+                <div className="w-24 h-24 bg-vitality-lime/20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-vitality-emerald">
+                   <User className="w-12 h-12" />
+                </div>
+                <h2 className="text-2xl font-black text-vitality-slate">{profile.full_name}</h2>
+                <p className="text-slate-400 font-medium">{profile.email}</p>
+             </div>
+
+             <div className="glass-card p-8 rounded-[2.5rem] space-y-6">
+                <h3 className="text-xl font-extrabold text-vitality-slate flex items-center gap-2">
+                   <Zap className="w-5 h-5 text-vitality-emerald" />
+                   WhatsApp Integration
+                </h3>
+                <div className="space-y-4">
+                   <p className="text-sm text-slate-500 leading-relaxed">
+                      Enter your phone number with country code (e.g., +971501234567) to enable AI logging via WhatsApp.
+                   </p>
+                   <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="+971..."
+                        defaultValue={profile.phone_number || ''}
+                        id="phone-input"
+                        className="flex-1 h-12 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-vitality-emerald outline-none font-bold"
+                      />
+                      <Button 
+                        onClick={async () => {
+                          const val = (document.getElementById('phone-input') as HTMLInputElement).value;
+                          const updated = await updateUserProfile(userId!, { phone_number: val });
+                          if (updated) {
+                            setUserProfile(updated);
+                            toast.success('Phone number updated!');
+                          }
+                        }}
+                        className="h-12 bg-vitality-emerald rounded-xl px-6 font-bold"
+                      >
+                         Save
+                      </Button>
+                   </div>
+                </div>
+             </div>
+          </div>
         ) : activeTab === 'achievements' ? (
           <AchievementsView userId={userId!} />
         ) : (

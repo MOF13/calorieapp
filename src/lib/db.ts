@@ -15,6 +15,21 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   return data;
 }
 
+export async function getUserByPhone(phone: string): Promise<UserProfile | null> {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('phone_number', phone)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching user by phone:', error);
+    return null;
+  }
+
+  return data;
+}
+
 export async function createUserProfile(profile: Omit<UserProfile, 'created_at' | 'updated_at'>): Promise<UserProfile | null> {
   const { data, error } = await supabase
     .from('user_profiles')

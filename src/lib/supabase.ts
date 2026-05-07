@@ -30,6 +30,7 @@ export interface UserProfile {
   preferred_language?: string;
   timezone?: string;
   is_ramadan_mode?: boolean;
+  phone_number?: string;
   created_at: string;
   updated_at: string;
 }
