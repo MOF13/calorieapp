@@ -66,13 +66,13 @@ If multiple items are mentioned, include them all. Be precise but helpful.`;
       .from('daily_logs')
       .select('id')
       .eq('user_id', profile.id)
-      .eq('date', dateKey)
+      .eq('log_date', dateKey)
       .single();
 
     if (!dailyLog) {
       const { data: newLog } = await supabaseClient
         .from('daily_logs')
-        .insert({ user_id: profile.id, date: dateKey })
+        .insert({ user_id: profile.id, log_date: dateKey })
         .select()
         .single();
       dailyLog = newLog;

@@ -11,7 +11,10 @@ interface RamadanModuleProps {
   onToggle: (enabled: boolean) => void;
 }
 
+import { useTranslation } from 'react-i18next';
+
 export function RamadanModule({ userId, isRamadanMode, onToggle }: RamadanModuleProps) {
+  const { t } = useTranslation();
   const [timings, setTimings] = useState<any>(null);
   const [nextEvent, setNextEvent] = useState<{ name: string; time: string; type: 'iftar' | 'suhoor' } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,11 +48,11 @@ export function RamadanModule({ userId, isRamadanMode, onToggle }: RamadanModule
     const maghrib = pTimings.Maghrib;
 
     if (currentTime < fajr) {
-      setNextEvent({ name: 'Suhoor ends at', time: fajr, type: 'suhoor' });
+      setNextEvent({ name: t('ramadan.time_remaining').replace('Time remaining', 'Suhoor ends at'), time: fajr, type: 'suhoor' });
     } else if (currentTime < maghrib) {
-      setNextEvent({ name: 'Iftar at', time: maghrib, type: 'iftar' });
+      setNextEvent({ name: t('ramadan.time_remaining').replace('Time remaining', 'Iftar at'), time: maghrib, type: 'iftar' });
     } else {
-      setNextEvent({ name: 'Suhoor tomorrow at', time: fajr, type: 'suhoor' });
+      setNextEvent({ name: t('ramadan.time_remaining').replace('Time remaining', 'Suhoor tomorrow at'), time: fajr, type: 'suhoor' });
     }
   };
 
@@ -68,9 +71,9 @@ export function RamadanModule({ userId, isRamadanMode, onToggle }: RamadanModule
   };
 
   const tips = [
-    { text: "Break your fast with 3 dates to restore blood sugar quickly.", icon: Coffee },
-    { text: "Aim for 2.5L of water between Iftar and Suhoor.", icon: Utensils },
-    { text: "Prioritize protein at Suhoor to stay full longer.", icon: CheckCircle2 }
+    { text: t('ramadan.wisdom') + ": Break your fast with 3 dates to restore blood sugar quickly.", icon: Coffee },
+    { text: t('ramadan.wisdom') + ": Aim for 2.5L of water between Iftar and Suhoor.", icon: Utensils },
+    { text: t('ramadan.wisdom') + ": Prioritize protein at Suhoor to stay full longer.", icon: CheckCircle2 }
   ];
 
   if (!isRamadanMode) {
@@ -81,8 +84,8 @@ export function RamadanModule({ userId, isRamadanMode, onToggle }: RamadanModule
                <Moon className="w-5 h-5" />
             </div>
             <div>
-               <h4 className="text-sm font-bold text-vitality-slate">Ramadan Mode</h4>
-               <p className="text-[10px] text-slate-400 font-medium">Auto-sync fasting with prayer times</p>
+               <h4 className="text-sm font-bold text-vitality-slate">{t('ramadan.mode')}</h4>
+               <p className="text-[10px] text-slate-400 font-medium">{t('ramadan.description')}</p>
             </div>
          </div>
          <Switch 
@@ -105,8 +108,8 @@ export function RamadanModule({ userId, isRamadanMode, onToggle }: RamadanModule
             <Moon className="w-5 h-5 text-indigo-300" />
           </div>
           <div>
-            <h3 className="text-lg font-black tracking-tight">Ramadan Mode</h3>
-            <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">Blessed Month</span>
+            <h3 className="text-lg font-black tracking-tight">{t('ramadan.mode')}</h3>
+            <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">{t('ramadan.blessed')}</span>
           </div>
         </div>
         <Switch 
@@ -124,7 +127,7 @@ export function RamadanModule({ userId, isRamadanMode, onToggle }: RamadanModule
 
         <div className="w-full bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/5">
            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-indigo-200">Time remaining</span>
+              <span className="text-xs font-bold text-indigo-200">{t('ramadan.time_remaining')}</span>
               <span className="text-xl font-black">{getCountdown()}</span>
            </div>
            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
@@ -134,7 +137,7 @@ export function RamadanModule({ userId, isRamadanMode, onToggle }: RamadanModule
       </div>
 
       <div className="mt-8 space-y-3 relative z-10">
-        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest ml-1">Sunnah Wisdom</p>
+        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest ml-1">{t('ramadan.wisdom')}</p>
         {tips.map((tip, i) => (
           <div key={i} className="flex gap-3 p-3 bg-white/5 rounded-2xl items-center border border-white/5">
              <tip.icon className="w-4 h-4 text-indigo-300" />

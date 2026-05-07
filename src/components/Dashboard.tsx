@@ -306,7 +306,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
                 className="bg-white/50 backdrop-blur-sm border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                {t('actions.delete').replace('Delete', 'Sign Out')}
+                {t('actions.sign_out')}
               </Button>
             </div>
           </div>
@@ -319,7 +319,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
             <h1 className="text-3xl md:text-4xl font-extrabold text-vitality-slate mb-2">
               {getGreeting()}, <span className="text-vitality-emerald">{profile?.full_name?.split(' ')[0] || 'Athlete'}</span>
             </h1>
-            <p className="text-slate-500 font-medium">{t('dashboard.stats_description') || 'Ready to hit your nutritional goals today?'}</p>
+            <p className="text-slate-500 font-medium">{t('dashboard.stats_description')}</p>
           </div>
           
           <div className="glass-card p-2 rounded-2xl flex items-center gap-1 shadow-sm">
@@ -441,7 +441,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
                       className="text-vitality-emerald hover:bg-vitality-lime/10 font-bold text-xs gap-2"
                     >
                       <Share2 className="w-4 h-4" />
-                      Share Progress
+                      {t('actions.share')}
                     </Button>
                   </div>
                   <MacroDonutChart
@@ -460,9 +460,9 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
                   />
                </div>
 
-               <div className="glass-card p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50">
+                <div className="glass-card p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-extrabold text-vitality-slate">Weight Journey</h3>
+                    <h3 className="text-xl font-extrabold text-vitality-slate">{t('dashboard.journey')}</h3>
                     <div className="px-3 py-1 bg-vitality-lime/20 rounded-lg text-[10px] font-black text-vitality-emerald uppercase tracking-widest">
                        Last 7 Days
                     </div>
@@ -524,7 +524,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
             />
             
             <h3 className="text-xl font-extrabold text-vitality-slate flex items-center gap-2 px-2">
-               Daily Timeline
+               {t('dashboard.timeline')}
             </h3>
             <div className="space-y-6">
                <MealSection

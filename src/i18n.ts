@@ -18,7 +18,10 @@ const resources = {
         "coach": "AI Coach",
         "today": "Today",
         "weekly": "Weekly",
-        "profile": "Profile"
+        "profile": "Profile",
+        "achievements": "Achievements",
+        "timeline": "Daily Timeline",
+        "stats_description": "Ready to hit your nutritional goals today?"
       },
       "actions": {
         "add_entry": "Add Entry",
@@ -27,7 +30,9 @@ const resources = {
         "save": "Save",
         "cancel": "Cancel",
         "edit": "Edit",
-        "delete": "Delete"
+        "delete": "Delete",
+        "share": "Share Progress",
+        "sign_out": "Sign Out"
       },
       "food": {
         "breakfast": "Breakfast",
@@ -38,6 +43,39 @@ const resources = {
         "protein": "Protein",
         "carbs": "Carbs",
         "fat": "Fat"
+      },
+      "ramadan": {
+        "mode": "Ramadan Mode",
+        "description": "Auto-sync fasting with prayer times",
+        "blessed": "Blessed Month",
+        "time_remaining": "Time remaining",
+        "wisdom": "Sunnah Wisdom"
+      },
+      "fasting": {
+        "tracker": "Fasting Tracker",
+        "active": "Active Fast",
+        "target": "Target",
+        "elapsed": "Elapsed",
+        "start": "Start Fasting",
+        "end": "End Fast",
+        "protocol": "Protocol"
+      },
+      "advisor": {
+        "title": "AI Meal Advisor",
+        "subtitle": "Smart Recommendations",
+        "get_advice": "Get Advice",
+        "clear": "Clear Suggestions",
+        "empty": "Tap 'Get Advice' to see what you should eat to hit your daily macro targets."
+      },
+      "coach": {
+        "title": "NutriChat AI",
+        "active": "Active Coach",
+        "placeholder": "Ask anything about your diet...",
+        "welcome": "Marhaba! I'm your AI Nutrition Coach. How can I help you today?"
+      },
+      "hydration": {
+        "title": "Hydration",
+        "subtitle": "Daily Intake"
       }
     }
   },
@@ -56,7 +94,10 @@ const resources = {
         "coach": "مدرب الذكاء الاصطناعي",
         "today": "اليوم",
         "weekly": "الأسبوعي",
-        "profile": "الملف الشخصي"
+        "profile": "الملف الشخصي",
+        "achievements": "الإنجازات",
+        "timeline": "الجدول اليومي",
+        "stats_description": "هل أنت مستعد لتحقيق أهدافك الغذائية اليوم؟"
       },
       "actions": {
         "add_entry": "إضافة وجبة",
@@ -65,7 +106,9 @@ const resources = {
         "save": "حفظ",
         "cancel": "إلغاء",
         "edit": "تعديل",
-        "delete": "حذف"
+        "delete": "حذف",
+        "share": "مشاركة التقدم",
+        "sign_out": "تسجيل الخروج"
       },
       "food": {
         "breakfast": "الفطور",
@@ -76,6 +119,39 @@ const resources = {
         "protein": "بروتين",
         "carbs": "كربوهيدرات",
         "fat": "دهون"
+      },
+      "ramadan": {
+        "mode": "وضع رمضان",
+        "description": "مزامنة الصيام مع مواقيت الصلاة",
+        "blessed": "الشهر المبارك",
+        "time_remaining": "الوقت المتبقي",
+        "wisdom": "من الهدي النبوي"
+      },
+      "fasting": {
+        "tracker": "متابع الصيام",
+        "active": "صيام نشط",
+        "target": "الهدف",
+        "elapsed": "الوقت المنقضي",
+        "start": "ابدأ الصيام",
+        "end": "إنهاء الصيام",
+        "protocol": "النظام"
+      },
+      "advisor": {
+        "title": "مستشار الوجبات الذكي",
+        "subtitle": "توصيات ذكية",
+        "get_advice": "احصل على نصيحة",
+        "clear": "مسح التوصيات",
+        "empty": "اضغط على 'احصل على نصيحة' لمعرفة ما يجب تناوله لتحقيق أهدافك الغذائية."
+      },
+      "coach": {
+        "title": "نوتري تشات AI",
+        "active": "المدرب النشط",
+        "placeholder": "اسأل أي شيء عن نظامك الغذائي...",
+        "welcome": "مرحباً! أنا مدرب التغذية الخاص بك. كيف يمكنني مساعدتك اليوم؟"
+      },
+      "hydration": {
+        "title": "شرب الماء",
+        "subtitle": "الاستهلاك اليومي"
       }
     }
   }

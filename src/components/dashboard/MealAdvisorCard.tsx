@@ -22,6 +22,8 @@ interface MealAdvisorCardProps {
   onLogMeal: (meal: any) => void;
 }
 
+import { useTranslation } from 'react-i18next';
+
 export function MealAdvisorCard({
   remainingCalories,
   remainingProtein,
@@ -29,6 +31,7 @@ export function MealAdvisorCard({
   remainingFat,
   onLogMeal
 }: MealAdvisorCardProps) {
+  const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
