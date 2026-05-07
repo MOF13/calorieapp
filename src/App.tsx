@@ -27,12 +27,21 @@ function App() {
 
       if (user) {
         setUserId(user.id);
-        const profile = await getUserProfile(user.id);
+        
+        // Try fetching profile with a small retry if it fails (handles potential lag)
+        let profile = await getUserProfile(user.id);
+        
+        if (!profile) {
+          // One more try after a short delay
+          await new Promise(resolve => setTimeout(resolve, 800));
+          profile = await getUserProfile(user.id);
+        }
 
         if (profile) {
           setUserProfile(profile);
           setCurrentView('dashboard');
         } else {
+          // If we have a user but no profile, they must complete onboarding
           setCurrentView('onboarding');
         }
       } else {

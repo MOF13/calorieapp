@@ -98,6 +98,8 @@ export default function Onboarding({ onComplete, userId }: OnboardingProps) {
     if (calculatedProfile && userId) {
       await createUserProfile({
         id: userId,
+        full_name: (data as any).full_name || 'Athlete',
+        email: (data as any).email || '',
         age: calculatedProfile.age,
         sex: calculatedProfile.sex,
         height_cm: calculatedProfile.heightCm,
@@ -116,7 +118,7 @@ export default function Onboarding({ onComplete, userId }: OnboardingProps) {
 
   const isStepValid = () => {
     if (currentStep === 1) {
-      return !!(data.age && data.age >= 13 && data.age <= 100 && data.sex && data.heightCm && data.heightCm > 0 && data.weightKg && data.weightKg > 0);
+      return !!(data.full_name && data.age && data.age >= 13 && data.age <= 100 && data.sex && data.heightCm && data.heightCm > 0 && data.weightKg && data.weightKg > 0);
     }
     if (currentStep === 2) {
       return !!data.activityLevel;
