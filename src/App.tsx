@@ -7,6 +7,7 @@ import Onboarding from './components/Onboarding';
 import Dashboard from './components/Dashboard';
 import { getCurrentUser, signUp, signIn } from './lib/auth';
 import { getUserProfile } from './lib/db';
+import { DashboardSkeleton } from './components/dashboard/DashboardSkeleton';
 
 type AppView = 'landing' | 'signup' | 'signin' | 'onboarding' | 'dashboard';
 
@@ -85,21 +86,22 @@ function App() {
     return { success: false, error: 'Failed to sign in' };
   };
 
-  const handleOnboardingComplete = () => {
-    setCurrentView('dashboard');
+  const handleOnboardingComplete = async () => {
+    if (userId) {
+      const profile = await getUserProfile(userId);
+      setUserProfile(profile);
+      setCurrentView('dashboard');
+    }
   };
 
   const handleSignOut = async () => {
     setUserId(null);
+    setUserProfile(null);
     setCurrentView('landing');
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
-        <div className="text-emerald-600 text-lg">Loading...</div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (currentView === 'landing') {
@@ -135,7 +137,14 @@ function App() {
     return <Onboarding onComplete={handleOnboardingComplete} userId={userId} />;
   }
 
-  return <Dashboard userId={userId} userProfile={userProfile} onSignOut={handleSignOut} onProfileUpdate={setUserProfile} />;
+  return (
+    <Dashboard 
+      userId={userId} 
+      userProfile={userProfile} 
+      onSignOut={handleSignOut} 
+      onProfileUpdate={setUserProfile} 
+    />
+  );
 }
 
 export default App;
