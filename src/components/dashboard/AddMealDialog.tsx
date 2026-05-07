@@ -252,4 +252,3 @@ export function AddMealDialog({ open, onClose, onAdd, templates = [], onScanClic
     </Dialog>
   );
 }
-}
