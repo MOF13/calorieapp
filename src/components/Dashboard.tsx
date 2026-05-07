@@ -89,10 +89,11 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
         setMeals(logMeals);
 
         // Check for achievements
-        if (userId && userProfile) {
+        /* 
+        if (userId && profile) {
           console.log('Checking achievements...');
           const unlocked = await checkAndUnlockAchievements(userId, {
-            streak: userProfile.current_streak || 0,
+            streak: profile.current_streak || 0,
             totalMeals: logMeals.length,
             waterToday: log.water_ml || 0,
             waterGoal: log.water_goal_ml || 2500,
@@ -104,6 +105,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
             }));
           }
         }
+        */
       }
     } catch (error) {
       console.error('Error in loadDailyData:', error);
@@ -357,7 +359,8 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
         {activeTab === 'weekly' ? (
           <WeeklyView userId={userId!} />
         ) : activeTab === 'achievements' ? (
-          <AchievementsView userId={userId!} />
+          <div className="py-20 text-center">Achievements coming soon...</div>
+          // <AchievementsView userId={userId!} />
         ) : (
           <div className="grid lg:grid-cols-12 gap-8">
             {/* Main Chart Section */}
@@ -444,6 +447,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
               onAdd={handleUpdateWater}
             />
 
+            {/* 
             <MealAdvisorCard 
               remainingCalories={Math.max(0, Math.round(profile.daily_calories - (dailyLog?.total_calories || 0)))}
               remainingProtein={Math.max(0, Math.round(profile.daily_protein_g - (dailyLog?.total_protein_g || 0)))}
@@ -451,6 +455,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
               remainingFat={Math.max(0, Math.round(profile.daily_fat_g - (dailyLog?.total_fat_g || 0)))}
               onLogMeal={handleAddMeal}
             />
+            */}
             
             <h3 className="text-xl font-extrabold text-vitality-slate flex items-center gap-2 px-2">
                Daily Timeline
@@ -557,6 +562,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
         onDetected={handleBarcodeDetected}
       />
 
+      {/* 
       {profile && (
         <SocialShareCard
           open={showShareCard}
@@ -573,6 +579,7 @@ export default function Dashboard({ userId, userProfile: initialProfile, onSignO
           }}
         />
       )}
+      */}
     </div>
   );
 }
