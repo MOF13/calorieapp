@@ -9,18 +9,12 @@ export default {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        outfit: ['Outfit', 'sans-serif'],
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
       colors: {
-        vitality: {
-          lime: '#A3E635',
-          emerald: '#10B981',
-          slate: '#0F172A',
-          amber: '#FBBF24',
-          mint: '#F8FAFC',
-        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -86,5 +80,5 @@ export default {
       },
     },
   },
-  plugins: [require('tailwindcss-animate'), require('tailwindcss-rtl')],
+  plugins: [require('tailwindcss-animate')],
 };

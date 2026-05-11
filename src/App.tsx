@@ -7,7 +7,6 @@ import Onboarding from './components/Onboarding';
 import Dashboard from './components/Dashboard';
 import { getCurrentUser, signUp, signIn } from './lib/auth';
 import { getUserProfile } from './lib/db';
-import { DashboardSkeleton } from './components/dashboard/DashboardSkeleton';
 
 type AppView = 'landing' | 'signup' | 'signin' | 'onboarding' | 'dashboard';
 
@@ -15,44 +14,28 @@ function App() {
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<any | null>(null);
 
   useEffect(() => {
     initializeApp();
   }, []);
 
   const initializeApp = async () => {
-    try {
-      const user = await getCurrentUser();
+    const user = await getCurrentUser();
 
-      if (user) {
-        setUserId(user.id);
-        
-        // Try fetching profile with a small retry if it fails (handles potential lag)
-        let profile = await getUserProfile(user.id);
-        
-        if (!profile) {
-          // One more try after a short delay
-          await new Promise(resolve => setTimeout(resolve, 800));
-          profile = await getUserProfile(user.id);
-        }
+    if (user) {
+      setUserId(user.id);
+      const profile = await getUserProfile(user.id);
 
-        if (profile) {
-          setUserProfile(profile);
-          setCurrentView('dashboard');
-        } else {
-          // If we have a user but no profile, they must complete onboarding
-          setCurrentView('onboarding');
-        }
+      if (profile) {
+        setCurrentView('dashboard');
       } else {
-        setCurrentView('landing');
+        setCurrentView('onboarding');
       }
-    } catch (error) {
-      console.error('Initialization error:', error);
+    } else {
       setCurrentView('landing');
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   const handleSignUp = async (email: string, password: string, name: string) => {
@@ -83,7 +66,6 @@ function App() {
       const profile = await getUserProfile(user.id);
 
       if (profile) {
-        setUserProfile(profile);
         setCurrentView('dashboard');
       } else {
         setCurrentView('onboarding');
@@ -95,22 +77,21 @@ function App() {
     return { success: false, error: 'Failed to sign in' };
   };
 
-  const handleOnboardingComplete = async () => {
-    if (userId) {
-      const profile = await getUserProfile(userId);
-      setUserProfile(profile);
-      setCurrentView('dashboard');
-    }
+  const handleOnboardingComplete = () => {
+    setCurrentView('dashboard');
   };
 
   const handleSignOut = async () => {
     setUserId(null);
-    setUserProfile(null);
     setCurrentView('landing');
   };
 
   if (isLoading) {
-    return <DashboardSkeleton />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
+        <div className="text-emerald-600 text-lg">Loading...</div>
+      </div>
+    );
   }
 
   if (currentView === 'landing') {
@@ -146,14 +127,7 @@ function App() {
     return <Onboarding onComplete={handleOnboardingComplete} userId={userId} />;
   }
 
-  return (
-    <Dashboard 
-      userId={userId} 
-      userProfile={userProfile} 
-      onSignOut={handleSignOut} 
-      onProfileUpdate={setUserProfile} 
-    />
-  );
+  return <Dashboard userId={userId} onSignOut={handleSignOut} />;
 }
 
 export default App;

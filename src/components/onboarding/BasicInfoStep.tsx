@@ -66,20 +66,6 @@ export default function BasicInfoStep({ data, updateData }: BasicInfoStepProps) 
 
       <div className="space-y-5 sm:space-y-6">
         <div>
-          <Label htmlFor="full_name" className="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3 block">
-            What's your full name?
-          </Label>
-          <Input
-            id="full_name"
-            type="text"
-            value={data.full_name || ''}
-            onChange={(e) => updateData({ full_name: e.target.value })}
-            placeholder="Enter your name"
-            className="text-base sm:text-lg h-11 sm:h-12"
-          />
-        </div>
-
-        <div>
           <Label htmlFor="age" className="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3 block">
             How old are you?
           </Label>
